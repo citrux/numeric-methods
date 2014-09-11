@@ -1,58 +1,86 @@
 module matrix;
 
 import std.math;
+import std.stdio;
 
 /***
     Структуры для строк и столбцов
-
-    Нужно уйти от этого никому не нужного дублирования
-    Проблема в том, что структуры наследовать нельзя
 ***/
-struct Row
+class Vector
 {
     real[] data;
     
     // доступ по индексу и присваивание по индексу
-    real opIndex(size_t i){return data[i];};
-    void opIndexAssign(real value, size_t i){data[i] = value;};
+    real opIndex(size_t i) {return data[i];};
+    void opIndexAssign(real value, size_t i) {data[i] = value;};
     // присваивание
-    void opAssign(real[] value){data = value;};
-    void opAssign(Row* r){this = *r;};  
-    // умножение строки на столбец 
-    real opBinary(string op)(Column b) if (op == "*")
+    void opAssign(real[] value) {data = value;};
+    // скалярное произведение 
+    real opBinary(string op)(Vector other)
+    if (op == "*")
     {
         real result = 0;
         foreach(i; 0 .. length)
-            result += data[i] * b[i];
+            result += this[i] * other[i];
+        return result;
+    }
+    Vector opBinary(string op)(Vector other)
+    if (op == "+" || op == "-")
+    {
+        Vector result = new Vector(this.length);
+        foreach(i; 0 .. length)
+            mixin("result[i] += this[i] " ~ op ~ " other[i];");
+        return result;
+    }
+    Vector opBinary(string op)(real x)
+    if (op == "*" || op == "/")
+    {
+        auto result = new Vector(this.length);
+        foreach(i; 0 .. this.length)
+            mixin("result[i] = this[i]" ~ op ~ " x;");
         return result;
     }
     
     @property size_t length() {return data.length;};
-    
-    this(real[] row){data = row;};
-    this(size_t n){data = new real[n];};
+
+    this() {};
+    this(real[] array) {data = array;};
+    this(size_t n)
+    {
+        data = new real[n];
+        foreach(ref el; data)
+            el = 0;
+    };
+}
+
+
+class Row : Vector
+{
+    void opAssign(Vector other) {data = other.data;};
+    this() {};
+    this(real[] array) {super(array);};
+    this(size_t n) {super(n);};
 };
 
-struct Column
+
+class Column : Vector
 {
-    real[] data;
-    
-    real opIndex(size_t i){return data[i];};
-    void opIndexAssign(real value, size_t i){data[i] = value;};
-    void opAssign(real[] value){data = value;};
-    void opAssign(Column* c){this = *c;};   
-    
-    @property size_t length() {return data.length;};
-    
-    this(real[] col){data = col;};
-    this(size_t n){data = new real[n];};
+    void opAssign(Vector other) {data = other.data;};
+    this() {};
+    this(real[] array) {super(array);};
+    this(size_t n) {super(n);};
 };
+
+alias Rows = Row[];
+alias Cols = Column[];
 
 unittest
 {
-    auto a = Row([1,2,3]);
-    auto b = Column([1,2,3]);
+    auto a = new Row([1,2,3]);
+    auto b = new Column([1,2,3]);
     assert(a * b == 14);
+    assert((a * 2).data == [2, 4, 6]);
+    assert((a / 2).data == [0.5, 1.0, 1.5]);
 }
 
 /***
@@ -63,54 +91,45 @@ struct Matrix
     real[] elements;
     size_t m, n;
 
-    real opIndex(size_t i, size_t j){return elements[i * n + j];};
+    real opIndex(size_t i, size_t j) {return elements[i * n + j];};
     void opIndexAssign(real value, size_t i, size_t j)
     {
         elements[i * n + j] = value;
     };
-    Matrix opBinary(string op)(Matrix B) if (op == "+")
+    Matrix opBinary(string op)(Matrix B)
+    if (op == "-" || op == "+")
     {
-        auto new_els = new real[m * n];
-        foreach(i, ref el; new_els)
-            el = elements[i] + B.elements[i];
-        return Matrix(m, n, new_els);
+        auto result = Matrix(m, n);
+        foreach(i; 0 .. m)
+            foreach(j; 0 .. n)
+                mixin("result[i, j] = this[i, j]" ~ op ~ "B[i, j];");
+        return result;
     }
-    Matrix opBinary(string op)(Matrix B) if (op == "-")
+    Matrix opBinary(string op)(real x)
+    if (op == "*" || op == "/")
     {
-        auto new_els = new real[m * n];
-        foreach(i, ref el; new_els)
-            el = elements[i] - B.elements[i];
-        return Matrix(m, n, new_els);
+        auto result = Matrix(m, n);
+        foreach(i; 0 .. m)
+            foreach(j; 0 .. n)
+                mixin("result[i, j] = this[i, j]" ~ op ~ "x;");
+        return result;
     }
-    Matrix opBinary(string op)(real x) if (op == "*")
+    Matrix opBinary(string op)(Matrix B)
+    if (op == "*")
     {
-        auto new_els = new real[m * n];
-        foreach(i, ref el; new_els)
-            el = elements[i] * x;
-        return Matrix(m, n, new_els);
-    }
-    Matrix opBinary(string op)(real x) if (op == "/")
-    {
-        return this * (1 / x);
-    }
-    Matrix opBinary(string op)(Matrix B) if (op == "*")
-    {
-        auto result = new Row[m];
-        foreach(i, r; this.to_rows())
-        {
-            result[i] = new Row(B.n);
-            foreach(j, c; B.to_columns())
-                result[i][j] = r * c;
-        }
-        return result.from_rows();
+        auto result = Matrix(m, B.n);
+        foreach(i, r; this.rows())
+            foreach(j, c; B.cols())
+                result[i, j] = r * c;
+        return result;
     }
     void change_rows(size_t i1, size_t i2)
     {
-        auto A = this.to_rows();
+        auto A = this.rows();
         auto buf = A[i1];
         A[i1] = A[i2];
         A[i2] = buf;
-        this = A.from_rows();
+        this = A.matrix();
     }
     this(size_t rows, size_t columns, real[] data)
     {
@@ -126,6 +145,7 @@ struct Matrix
         foreach(ref el; elements)
             el = 0;
     }
+    this(size_t size) {this(size, size);}
 }
 
 
@@ -143,18 +163,18 @@ unittest
 /***
     Преобразование матрицы в массив строк
 ***/
-Row[] to_rows(Matrix A)
+Rows rows(Matrix A)
 {
     auto result = new Row[A.m];
     foreach(i; 0 .. A.m)
-        result[i] = A.elements[i * A.n .. (i + 1) * A.n].dup;
+        result[i] = new Row(A.elements[i * A.n .. (i + 1) * A.n]);
     return result;
 }
 
 /***
     Преобразование массив строк в матрицу
 ***/
-Matrix from_rows(Row[] rows)
+Matrix matrix(Rows rows)
 {
     auto m = rows.length;
     auto n = rows[0].length;
@@ -167,12 +187,12 @@ Matrix from_rows(Row[] rows)
 /***
     Преобразование матрицы в массив столбцов
 ***/
-Column[] to_columns(Matrix A)
+Cols cols(Matrix A)
 {
     auto result = new Column[A.n];
     foreach(j; 0 .. A.n)
     {
-        result[j] = new real[A.m];
+        result[j] = new Column(A.m);
         foreach(i; 0 .. A.m)
             result[j][i] = A.elements[i * A.n + j];
     }
@@ -182,7 +202,7 @@ Column[] to_columns(Matrix A)
 /***
     Преобразование массив столбцов в матрицу
 ***/
-Matrix from_columns(Column[] columns)
+Matrix matrix(Cols columns)
 {
     auto n = columns.length;
     auto m = columns[0].length;
@@ -198,22 +218,15 @@ Matrix from_columns(Column[] columns)
 ***/
 Matrix submatrix(Matrix A, size_t i, size_t j)
 {
-    Row[] rows = A.to_rows();
-    Row[] new_rows = new Row[rows.length - 1];
-    foreach(k, el; rows)
-        if (k <= i)
-            new_rows[k] = el;
-        else
-            new_rows[k - 1] = el;
+    Rows rows = A.rows();
+    Rows new_rows = new Row[rows.length - 1];
+    new_rows = rows[0 .. i] ~ rows[i + 1 .. $];
     
-    Column[] cols = new_rows.from_rows().to_columns();
-    Column[] new_cols = new Column[cols.length - 1];
-    foreach(k, el; cols)
-        if (k <= j)
-            new_cols[k] = el;
-        else
-            new_cols[k - 1] = el;
-    return new_cols.from_columns();
+    Cols cols = new_rows.matrix().cols();
+    Cols new_cols = new Column[cols.length - 1];
+    new_cols = cols[0 .. j] ~ cols[j + 1 .. $];
+
+    return new_cols.matrix();
 }
 
 unittest
@@ -231,60 +244,69 @@ void LUP(Matrix A, out size_t[] P, out Matrix L, out Matrix U)
     foreach(i, ref el; P)
         el = i;
 
-    auto a = Matrix(m, n, A.elements);
-    
-    Column[] L_cols = new Column[n];
-    Row[] U_rows = new Row[n];
+    Cols L_cols = new Column[n];
+    Rows U_rows = new Row[n];
 
     foreach(i; 0 .. n)
     {
-        Column v = a.to_columns()[0];
+        Column v = A.cols()[0];
         size_t max_pos = 0;
         if (v[0] == 0)
         {
-            foreach(j; 1 .. a.n)
+            foreach(j; 1 .. A.n)
                 if (abs(v[j]) > abs(v[max_pos]))
                     max_pos = j;
-            a.change_rows(0, max_pos);
+            A.change_rows(0, max_pos);
             auto buf = P[i];
             P[i] = P[max_pos + i];
-            P[max_pos + i] = P[i];
+            P[max_pos + i] = buf;
         }
-        v = a.to_columns()[0];
-        Row u = a.to_rows()[0];
+
+        v = A.cols()[0];
+        Row u = A.rows()[0];
+        auto top = v[0];
+        if (top != 0)
+        {
+            v = v / top;
+        }
         L_cols[i] = new Column(n);
-        foreach(k; 0 .. i)
-            L_cols[i][k] = 0;
-        foreach(k; i .. n)
-            L_cols[i][k] = v[k - i];
-        foreach(k; 0 .. n)
-            L_cols[i][k] = L_cols[i][k] / u[0];
+        L_cols[i].data[i .. $] = v.data; // нужно переписать не используя data
 
         U_rows[i] = new Row(n);
-        foreach(k; 0 .. i)
-            U_rows[i][k] = 0;
-        foreach(k; i .. n)
-            U_rows[i][k] = u[k - i];
+        U_rows[i].data[i .. $] = u.data; // аналогично
 
         if (i < n - 1)
         {
-            a = a - ([v].from_columns() * [u].from_rows()) / u[0];
-            a = a.submatrix(0, 0);
+            A = A - ([v].matrix() * [u].matrix());
+            A = A.submatrix(0, 0);
         }
     }
-    L = L_cols.from_columns();
-    U = U_rows.from_rows();
+    L = L_cols.matrix();
+    U = U_rows.matrix();
 }
 
 unittest
 {
-    auto A = Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 8]);
-    auto L = Matrix(3, 3);
-    auto U = Matrix(3, 3);
-    auto P = Matrix(3, 3);
-    auto p = new size_t[3];
-    LUP(A, p, L, U);
-    foreach(i, el; p)
-        P[i, el] = 1;
-    assert(A == P * L * U);
+    bool testLUP(Matrix A)
+    {
+        if (A.n != A.m)
+            return false;
+        auto size = A.n;
+        auto L = Matrix(size);
+        auto U = Matrix(size);
+        auto P = Matrix(size);
+        auto p = new size_t[size];
+        LUP(A, p, L, U);
+        foreach(i, el; p)
+            P[i, el] = 1;
+        return (A == P * L * U);
+    }
+
+    assert(testLUP(Matrix(1, 1, [0])));
+    assert(testLUP(Matrix(1, 1, [1])));
+    assert(testLUP(Matrix(2, 2, [1, 2, 3, 4])));
+    assert(testLUP(Matrix(2, 2, [1, 2, 2, 1])));
+    assert(testLUP(Matrix(3, 3, [0, 0, 0, 0, 0, 0, 7, 8, 8])));
+    assert(testLUP(Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 8])));
+
 }

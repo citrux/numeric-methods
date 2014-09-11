@@ -6,4 +6,4 @@ all:
 	$(DC) $(DFLAGS) $(SOURCES)
 
 debug:
-	$(DC) -unittest $(SOURCES)
+	$(DC) -unittest -g $(SOURCES)
