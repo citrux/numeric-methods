@@ -1,6 +1,8 @@
 module matrix;
 
 import std.math;
+import std.algorithm;
+import std.stdio;
 
 /***
     Структуры для строк и столбцов
@@ -87,15 +89,15 @@ unittest
 ***/
 struct Matrix 
 {
-    private real[] elements;
-    private size_t n_rows, n_cols;
+    private real[] _data;
+    private size_t _m, _n;
     
-    @property size_t m() {return n_rows;};
-    @property size_t n() {return n_cols;};
-    real opIndex(size_t i, size_t j) {return elements[i * n + j];};
+    @property size_t m() {return _m;};
+    @property size_t n() {return _n;};
+    real opIndex(size_t i, size_t j) {return _data[i * _n + j];};
     void opIndexAssign(real value, size_t i, size_t j)
     {
-        elements[i * n + j] = value;
+        _data[i * _n + j] = value;
     };
     Matrix opBinary(string op)(Matrix B)
     if (op == "-" || op == "+")
@@ -124,26 +126,24 @@ struct Matrix
                 result[i, j] = r * c;
         return result;
     }
-    void change_rows(size_t i1, size_t i2)
+    void swap_rows(size_t i1, size_t i2)
     {
         auto A = this.rows();
-        auto buf = A[i1];
-        A[i1] = A[i2];
-        A[i2] = buf;
+        swap(A[i1], A[i2]);
         this = A.matrix();
     }
     this(size_t rows, size_t cols, real[] data)
     {
-        n_rows = rows;
-        n_cols = cols;
-        elements = data;
+        _m = rows;
+        _n = cols;
+        _data = data;
     }
     this(size_t rows, size_t cols)
     {
-        n_rows = rows;
-        n_cols = cols;
-        elements = new real[rows * cols];
-        foreach(ref el; elements)
+        _m = rows;
+        _n = cols;
+        _data = new real[rows * cols];
+        foreach(ref el; _data)
             el = 0;
     }
     this(size_t size) {this(size, size);}
@@ -156,10 +156,8 @@ unittest
     auto b = Matrix(3, 3, [9, 8, 7, 6, 5, 4, 3, 2, 1]);
     assert(a + b == Matrix(3, 3, [10, 10, 10, 10, 10, 10, 10, 10, 10]));
     assert(a - b == Matrix(3, 3, [-8, -6, -4, -2, 0, 2, 4, 6, 8]));
-    a = a * 6;
-    assert(a == Matrix(3, 3, [6, 12, 18, 24, 30, 36, 42, 48, 54]));
-    a = a / 3; 
-    assert(a == Matrix(3, 3, [2, 4, 6, 8, 10, 12, 14, 16, 18]));
+    assert(a * 6 == Matrix(3, 3, [6, 12, 18, 24, 30, 36, 42, 48, 54])); 
+    assert((a * 6) / 3 == Matrix(3, 3, [2, 4, 6, 8, 10, 12, 14, 16, 18]));
 }
 /***
     Преобразование матрицы в массив строк
@@ -226,8 +224,8 @@ Matrix matrix(Cols cols)
     auto m = cols[0].length;
     auto data = new real[m * n];
     foreach(j, c; cols)
-        foreach(i, v; c.data)
-            data[i * n + j] = v;
+        foreach(i; 0 .. c.length)
+            data[i * n + j] = c[i];
     return Matrix(m, n, data);
 }
 
@@ -257,12 +255,12 @@ unittest
     assert(b == Matrix(2, 2, [1, 3, 7, 9]));
 }
 
-void LUP(Matrix A, out size_t[] P, out Matrix L, out Matrix U)
+void LUP(Matrix A, out size_t[] p, out Matrix L, out Matrix U)
 {
-    auto m = A.m;
-    auto n = A.n;
-    P = new size_t[n];
-    foreach(i, ref el; P)
+    auto n = min(A.n, A.m);
+    
+    p = new size_t[n];
+    foreach(i, ref el; p)
         el = i;
     
     Cols L_cols = new Col[n];
@@ -273,13 +271,9 @@ void LUP(Matrix A, out size_t[] P, out Matrix L, out Matrix U)
         if (A[j, j] == 0)
         {
             foreach(i; j + 1 .. n)
-                if (abs(A[i, j]) > abs(A[P[j], j]))
-                {
-                    auto buffer = P[j];
-                    P[j] = P[i];
-                    P[i] = buffer;
-                }
-            A.change_rows(j, P[j]);
+                if (abs(A[i, j]) > abs(A[p[j], j]))
+                    swap(p[i], p[j]);
+            A.swap_rows(j, p[j]);
         }
 
         Col v = A.col(j);
@@ -295,6 +289,7 @@ void LUP(Matrix A, out size_t[] P, out Matrix L, out Matrix U)
 
         A = A - (v.matrix() * u.matrix());
     }
+
     L = L_cols.matrix();
     U = U_rows.matrix();
 }
@@ -303,16 +298,16 @@ unittest
 {
     bool testLUP(Matrix A)
     {
-        if (A.n != A.m)
-            return false;
         Matrix L, U, P;
         size_t[] p;
         LUP(A, p, L, U);
+        P = Matrix(p.length);
         foreach(i, el; p)
             P[i, el] = 1;
         return (A == P * L * U);
     }
 
+    // квадратные
     assert(testLUP(Matrix(1, 1, [0])));
     assert(testLUP(Matrix(1, 1, [1])));
     assert(testLUP(Matrix(2, 2, [1, 0,
@@ -342,4 +337,9 @@ unittest
                                  0, 1, 3, 3, 5,
                                  0, 1, 3, 4, 2,
                                  0, 1, 3, 8, 2])));
+    // прямоугольные
+    assert(testLUP(Matrix(1, 2, [1, 2])));
+    assert(testLUP(Matrix(3, 4, [0, 2, 3, 4,
+                                 0, 1, 3, 2,
+                                 0, 1, 3, 3])));
 }
