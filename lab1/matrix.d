@@ -87,9 +87,11 @@ unittest
 ***/
 struct Matrix 
 {
-    real[] elements;
-    size_t m, n;
-
+    private real[] elements;
+    private size_t n_rows, n_cols;
+    
+    @property size_t m() {return n_rows;};
+    @property size_t n() {return n_cols;};
     real opIndex(size_t i, size_t j) {return elements[i * n + j];};
     void opIndexAssign(real value, size_t i, size_t j)
     {
@@ -132,14 +134,14 @@ struct Matrix
     }
     this(size_t rows, size_t cols, real[] data)
     {
-        m = rows;
-        n = cols;
+        n_rows = rows;
+        n_cols = cols;
         elements = data;
     }
     this(size_t rows, size_t cols)
     {
-        m = rows;
-        n = cols;
+        n_rows = rows;
+        n_cols = cols;
         elements = new real[rows * cols];
         foreach(ref el; elements)
             el = 0;
@@ -164,7 +166,9 @@ unittest
 ***/
 Row row(Matrix A, size_t i)
 {
-    auto result = new Row(A.elements[i * A.n .. (i + 1) * A.n]);
+    auto result = new Row(A.n);
+    foreach(j; 0 .. A.n)
+        result[j] = A[i, j];
     return result;
 }
 
@@ -201,7 +205,7 @@ Col col(Matrix A, size_t j)
 {
     auto result = new Col(A.m);
     foreach(i; 0 .. A.m)
-        result[i] = A.elements[i * A.n + j];
+        result[i] = A[i, j];
     return result;
 }
 
@@ -286,11 +290,8 @@ void LUP(Matrix A, out size_t[] P, out Matrix L, out Matrix U)
         else
             v[j] = 1;
 
-        L_cols[j] = new Col(n);
-        L_cols[j].data[j .. $] = v.data[j .. $]; // нужно переписать не используя data
-
-        U_rows[j] = new Row(n);
-        U_rows[j].data[j .. $] = u.data[j .. $]; // аналогично
+        L_cols[j] = v;
+        U_rows[j] = u;
 
         A = A - (v.matrix() * u.matrix());
     }
@@ -304,11 +305,8 @@ unittest
     {
         if (A.n != A.m)
             return false;
-        auto size = A.n;
-        auto L = Matrix(size);
-        auto U = Matrix(size);
-        auto P = Matrix(size);
-        auto p = new size_t[size];
+        Matrix L, U, P;
+        size_t[] p;
         LUP(A, p, L, U);
         foreach(i, el; p)
             P[i, el] = 1;
