@@ -1,6 +1,6 @@
 DC=dmd
 DFLAGS=-O -release
-SOURCES=$(shell ls *.d)
+SOURCES=main.d matrix.d
 
 all:
 	$(DC) $(DFLAGS) $(SOURCES)
