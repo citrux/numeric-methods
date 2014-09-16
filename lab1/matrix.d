@@ -15,7 +15,9 @@ struct Matrix
     
     @property const size_t m() {return _m;};
     @property const size_t n() {return _n;};
+    
     ref real opIndex(size_t i, size_t j=0) {return _data[i * _n + j];};
+    
     Matrix opBinary(string op)(Matrix B)
     if (op == "-" || op == "+")
     {
@@ -25,6 +27,7 @@ struct Matrix
                 mixin("result[i, j] = this[i, j]" ~ op ~ "B[i, j];");
         return result;
     }
+
     Matrix opBinary(string op)(real x)
     if (op == "*" || op == "/")
     {
@@ -34,6 +37,7 @@ struct Matrix
                 mixin("result[i, j] = this[i, j]" ~ op ~ "x;");
         return result;
     }
+
     Matrix opBinary(string op)(Matrix B)
     if (op == "*")
     {
@@ -44,17 +48,20 @@ struct Matrix
                     result[i, j] += this[i, k] * B[k, j];
         return result;
     }
+    
     void swapRows(size_t i1, size_t i2)
     {
         foreach(j; 0 .. n)
             swap(this[i1, j], this[i2, j]);
     }
+    
     this(size_t rows, size_t cols, real[] data)
     {
         _m = rows;
         _n = cols;
         _data = data;
     }
+    
     this(size_t rows, size_t cols)
     {
         _m = rows;
@@ -63,7 +70,10 @@ struct Matrix
         foreach(ref el; _data)
             el = 0;
     }
+    
     this(size_t size) {this(size, size);}
+    
+    this(this) {_data = _data.dup;};
 }
 
 Matrix Col(real[] data)
@@ -74,6 +84,14 @@ Matrix Col(real[] data)
 Matrix Col(size_t n)
 {
     return Matrix(n, 1);
+}
+
+Matrix Perm(size_t[] p)
+{
+    auto result = Matrix(p.length);
+    foreach(i, el; p)
+        result[i, el] = 1;
+    return result;
 }
 
 unittest
@@ -87,15 +105,9 @@ unittest
     assert(a * b == Matrix(3, 3, [30, 24, 18, 84, 69, 54, 138, 114, 90]));
 }
 
-void LUP(Matrix B, out size_t[] p, out Matrix L, out Matrix U)
+void LUP(Matrix A, out size_t[] p, out Matrix L, out Matrix U)
 {
-    auto n = B.n;
-    // некрасивый способ скопировать матрицу B
-    // в остальных случаях адреса A[i,j] будут совпадать с адресами B[i,j]
-    auto A = Matrix(n);
-    foreach(i; 0 .. n)
-        foreach(j; 0 .. n)
-            A[i, j] = B[i, j];
+    auto n = A.n;
 
     L = Matrix(n);
     U = Matrix(n);
@@ -165,17 +177,8 @@ unittest
     {
         Matrix L, U, P;
         size_t[] p;
-        //writeln(A);
         LUP(A, p, L, U);
-        P = Matrix(p.length);
-        foreach(i, el; p)
-            P[i, el] = 1;
-        //writeln(A);
-        //writeln(L);
-        //writeln(U);
-        //writeln(P, " ", A);
-        //writeln("PA ", P * A);
-        //writeln("LU ", L * U);
+        P = Perm(p);
         return (P * A == L * U);
     }
 
