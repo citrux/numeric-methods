@@ -1,8 +1,7 @@
 module matrix;
 
-import std.math;
-import std.algorithm;
-import std.stdio;
+import std.math : abs;
+import std.algorithm : swap;
 
 
 /***
@@ -10,20 +9,20 @@ import std.stdio;
 ***/
 struct Matrix 
 {
-    private size_t _m, _n;
-    private real[] _data;
+    private size_t _rows, _cols;
+    real[] _data;
     
-    @property const size_t m() {return _m;};
-    @property const size_t n() {return _n;};
+    @property const size_t rows() {return _rows;};
+    @property const size_t cols() {return _cols;};
     
-    ref real opIndex(size_t i, size_t j=0) {return _data[i * _n + j];};
+    ref real opIndex(size_t i, size_t j=0) {return _data[i * _cols + j];};
     
     Matrix opBinary(string op)(Matrix B)
     if (op == "-" || op == "+")
     {
-        auto result = Matrix(m, n);
-        foreach(i; 0 .. m)
-            foreach(j; 0 .. n)
+        auto result = Matrix(_rows, _cols);
+        foreach(i; 0 .. _rows)
+            foreach(j; 0 .. _cols)
                 mixin("result[i, j] = this[i, j]" ~ op ~ "B[i, j];");
         return result;
     }
@@ -31,9 +30,9 @@ struct Matrix
     Matrix opBinary(string op)(real x)
     if (op == "*" || op == "/")
     {
-        auto result = Matrix(m, n);
-        foreach(i; 0 .. m)
-            foreach(j; 0 .. n)
+        auto result = Matrix(_rows, _cols);
+        foreach(i; 0 .. _rows)
+            foreach(j; 0 .. _cols)
                 mixin("result[i, j] = this[i, j]" ~ op ~ "x;");
         return result;
     }
@@ -41,31 +40,31 @@ struct Matrix
     Matrix opBinary(string op)(Matrix B)
     if (op == "*")
     {
-        auto result = Matrix(m, B.n);
-        foreach(i; 0 .. result.m)
-            foreach(j; 0 .. result.n)
-                foreach(k; 0 .. n)
+        auto result = Matrix(_rows, B.cols);
+        foreach(i; 0 .. result.rows)
+            foreach(j; 0 .. result.cols)
+                foreach(k; 0 .. _cols)
                     result[i, j] += this[i, k] * B[k, j];
         return result;
     }
     
     void swapRows(size_t i1, size_t i2)
     {
-        foreach(j; 0 .. n)
+        foreach(j; 0 .. _cols)
             swap(this[i1, j], this[i2, j]);
     }
     
     this(size_t rows, size_t cols, real[] data)
     {
-        _m = rows;
-        _n = cols;
+        _rows = rows;
+        _cols = cols;
         _data = data;
     }
     
     this(size_t rows, size_t cols)
     {
-        _m = rows;
-        _n = cols;
+        _rows = rows;
+        _cols = cols;
         _data = new real[rows * cols];
         foreach(ref el; _data)
             el = 0;
@@ -81,9 +80,9 @@ Matrix Col(real[] data)
     return Matrix(data.length, 1, data);
 }
 
-Matrix Col(size_t n)
+Matrix Col(size_t cols)
 {
-    return Matrix(n, 1);
+    return Matrix(cols, 1);
 }
 
 Matrix Perm(size_t[] p)
@@ -107,7 +106,7 @@ unittest
 
 void LUP(Matrix A, out size_t[] p, out Matrix L, out Matrix U)
 {
-    auto n = A.n;
+    auto n = A.rows;
 
     L = Matrix(n);
     U = Matrix(n);
@@ -119,20 +118,20 @@ void LUP(Matrix A, out size_t[] p, out Matrix L, out Matrix U)
     foreach(k; 0 .. n)
     {
         auto pivot = abs(A[k, k]);
-        auto k1 = k;
+        auto l = k;
         foreach(i; k + 1 .. n)
             if (abs(A[i, k]) > pivot)
             {
                 pivot = abs(A[i, k]);
-                k1 = i;
+                l = i;
             }
-        swap(p[k], p[k1]);
-        A.swapRows(k, k1);
+        swap(p[k], p[l]);
+        A.swapRows(k, l);
         foreach(i; k + 1 .. n)
         {
             if (A[k, k] != 0)
                 A[i, k] /= A[k, k];
-            foreach(j; k + 1 .. A.n)
+            foreach(j; k + 1 .. n)
                 A[i, j] -= A[i, k] * A[k, j];
         }
     }
@@ -144,31 +143,6 @@ void LUP(Matrix A, out size_t[] p, out Matrix L, out Matrix U)
                 U[i, j] = A[i, j];
     foreach(i; 0 .. n)
         L[i, i] = 1;
-}
-
-Matrix LUPsolve(Matrix A, Matrix b)
-{
-    auto n = A.n;
-    auto x = Col(n);
-    auto y = Col(n);
-    Matrix L, U;
-    size_t[] p;
-    LUP(A, p, L, U);
-    real sum;
-    foreach(i; 0 .. n)
-    {
-        y[i] = b[p[i]];
-        foreach(j; 0 .. i)
-            y[i] -= L[i, j] * y[j];
-    }
-    foreach_reverse(i; 0 .. n)
-    {
-        x[i] = y[i];
-        foreach(j; i + 1 .. n)
-            x[i] -= U[i, j] * x[j];
-        x[i] /= U[i, i];
-    }
-    return x;
 }
 
 unittest
@@ -222,4 +196,44 @@ unittest
     //assert(testLUP(Matrix(3, 4, [0, 2, 3, 4,
     //                             0, 1, 3, 2,
     //                             0, 1, 3, 3])));
+}
+
+Matrix LUPsolve(Matrix A, Matrix b)
+{
+    auto cols = A.cols;
+    auto x = Col(cols);
+    auto y = Col(cols);
+    Matrix L, U;
+    size_t[] p;
+    LUP(A, p, L, U);
+    real sum;
+    foreach(i; 0 .. cols)
+    {
+        y[i] = b[p[i]];
+        foreach(j; 0 .. i)
+            y[i] -= L[i, j] * y[j];
+    }
+    foreach_reverse(i; 0 .. cols)
+    {
+        x[i] = y[i];
+        foreach(j; i + 1 .. cols)
+            x[i] -= U[i, j] * x[j];
+        x[i] /= U[i, i];
+    }
+    return x;
+}
+
+unittest
+{
+    bool testLUPsolve(Matrix A, Matrix b)
+    {
+        auto x = LUPsolve(A, b);
+        return (A * x == b);
+    }
+    //assert(testLUPsolve(Matrix(4, 4, [-7, 2, 1, 2,
+    //                                  3, -9, 2, 4,
+    //                                  7, 1, -13, 3,
+    //                                  9, 4, 1, -15]),
+    //                    Col([-6, 9, -5, -6])
+    //                    ));
 }
