@@ -1,14 +1,14 @@
 module main;
 
 import std.stdio;
-import matrix;
+import std.math : sin, PI;
+import integral;
 
 void main() {
-    auto A = Matrix(4, 4, [-7, 2, 1, 2,
-                            3, -9, 2, 4,
-                            7, 1, -13, 3,
-                            9, 4, 1, -15]);
-    auto b = Col([-6, 9, -5, -6]);
-    auto x = LUPsolve(A, b);
-    writeln(x);
+    writeln("");
+    writeln("sin x, 0 .. pi: ");
+    writeln("  * left_rectangles ", left_rectangles(function(real x){return sin(x);}, 0, PI, 10));
+    writeln("  * right_rectangles ", right_rectangles(function(real x){return sin(x);}, 0, PI, 10));
+    writeln("  * middle_rectangles ", middle_rectangles(function(real x){return sin(x);}, 0, PI, 10));
+    writeln("  * parabolas ", parabolas(function(real x){return sin(x);}, 0, PI, 10));
 }
