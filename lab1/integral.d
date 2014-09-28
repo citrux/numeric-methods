@@ -3,7 +3,7 @@ module integral;
 import std.math : abs;
 import polynomials;
 
-auto integrate_step(real function(real) f, real[] points, real[] weights)
+auto integrateStep(real function(real) f, real[] points, real[] weights)
 {
     auto g = delegate(real a, real b)
     {
@@ -20,7 +20,7 @@ auto integrate(real function(real) f, real[] points, real[] weights, real left, 
     auto h = (right - left) / count;
     real result = 0;
     real x = left;
-    auto g = integrate_step(f, points, weights);
+    auto g = integrateStep(f, points, weights);
     foreach(i; 0 .. count)
     {
         result += g(x, x + h);
@@ -44,13 +44,13 @@ auto integrate(real function(real) f, uint n, real left, real right, size_t coun
 
 real[] weights(real[] points)
 {
-    auto p = polynomFromRoots(points);
+    auto p = polynomialFromRoots(points);
     auto result = new real[points.length];
     foreach(i, x; points)
     {
         auto pi = p.removeRoot(x);
         auto value = calculatePolynom(pi, x);
-        result[i] = 1.0L / 2 / value * integratePolynom(pi);
+        result[i] = 1.0L / 2 / value * integratePolynomial(pi);
     }
     return result;
 }
@@ -86,6 +86,7 @@ unittest
     {
         return abs(output - answer) < precision;
     }
+
     assert(test(right_rectangles(function(real x){return 1;}, -1, 1, 5),
                 2, .0001));
     assert(test(right_rectangles(function(real x){return 1.0L;}, -1, 1, 8),
