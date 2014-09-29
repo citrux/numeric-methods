@@ -1,6 +1,7 @@
 module integral;
 
 import std.math : abs;
+import matrix;
 import polynomials;
 
 auto integrateStep(real function(real) f, real[] points, real[] weights)
@@ -40,6 +41,32 @@ auto integrate(real function(real) f, uint n, real left, real right, size_t coun
     foreach(i, ref el; points)
         el = -1.0L + 2.0L / n * i;
     return integrate(f, points, weights(points), left, right, count);
+}
+
+auto stupidIntegrate(real function(real) f, real[] points)
+{
+    auto n = points.length;
+    auto A = Matrix(n);
+    auto b = Col(n);
+    foreach(i; 0 .. n)
+    {
+        A[i, 0] = 1;
+        b[i] = f(points[i]);
+        foreach(j; 1 .. n)
+            A[i, j] = A[i, j-1] * points[i];
+    }
+    auto polynomial = LUPsolve(A, b);
+
+    auto limits = Matrix(1, n);
+    real ai = points[0], bi = points[$-1];
+    foreach(i; 0 .. n)
+    {
+        limits[0, i] = (bi - ai) / (i + 1);
+        ai *= points[0];
+        bi *= points[$-1];
+    }
+
+    return (limits * polynomial)[0, 0];
 }
 
 real[] weights(real[] points)
