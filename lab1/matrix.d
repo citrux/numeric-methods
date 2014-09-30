@@ -10,33 +10,13 @@ import std.algorithm : swap;
 struct Matrix 
 {
     private size_t _rows, _cols;
-    real[] _data;
+    private real[] _data;
     
     @property const size_t rows() {return _rows;};
     @property const size_t cols() {return _cols;};
     
     ref real opIndex(size_t i, size_t j=0) {return _data[i * _cols + j];};
     
-    Matrix opBinary(string op)(Matrix B)
-    if (op == "-" || op == "+")
-    {
-        auto result = Matrix(_rows, _cols);
-        foreach(i; 0 .. _rows)
-            foreach(j; 0 .. _cols)
-                mixin("result[i, j] = this[i, j]" ~ op ~ "B[i, j];");
-        return result;
-    }
-
-    Matrix opBinary(string op)(real x)
-    if (op == "*" || op == "/")
-    {
-        auto result = Matrix(_rows, _cols);
-        foreach(i; 0 .. _rows)
-            foreach(j; 0 .. _cols)
-                mixin("result[i, j] = this[i, j]" ~ op ~ "x;");
-        return result;
-    }
-
     Matrix opBinary(string op)(Matrix B)
     if (op == "*")
     {
@@ -75,6 +55,15 @@ struct Matrix
     this(this) {_data = _data.dup;};
 }
 
+
+unittest
+{
+    auto a = Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    auto b = Matrix(3, 3, [9, 8, 7, 6, 5, 4, 3, 2, 1]);
+    assert(a * b == Matrix(3, 3, [30, 24, 18, 84, 69, 54, 138, 114, 90]));
+}
+
+
 Matrix Col(real[] data)
 {
     return Matrix(data.length, 1, data);
@@ -83,25 +72,6 @@ Matrix Col(real[] data)
 Matrix Col(size_t cols)
 {
     return Matrix(cols, 1);
-}
-
-Matrix Perm(size_t[] p)
-{
-    auto result = Matrix(p.length);
-    foreach(i, el; p)
-        result[i, el] = 1;
-    return result;
-}
-
-unittest
-{
-    auto a = Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    auto b = Matrix(3, 3, [9, 8, 7, 6, 5, 4, 3, 2, 1]);
-    assert(a + b == Matrix(3, 3, [10, 10, 10, 10, 10, 10, 10, 10, 10]));
-    assert(a - b == Matrix(3, 3, [-8, -6, -4, -2, 0, 2, 4, 6, 8]));
-    assert(a * 6 == Matrix(3, 3, [6, 12, 18, 24, 30, 36, 42, 48, 54])); 
-    assert((a * 6) / 3 == Matrix(3, 3, [2, 4, 6, 8, 10, 12, 14, 16, 18]));
-    assert(a * b == Matrix(3, 3, [30, 24, 18, 84, 69, 54, 138, 114, 90]));
 }
 
 void LUP(Matrix A, out size_t[] p, out Matrix L, out Matrix U)
@@ -147,6 +117,13 @@ void LUP(Matrix A, out size_t[] p, out Matrix L, out Matrix U)
 
 unittest
 {
+    Matrix Perm(size_t[] p)
+    {
+        auto result = Matrix(p.length);
+        foreach(i, el; p)
+            result[i, el] = 1;
+        return result;
+    }
     bool testLUP(Matrix A)
     {
         Matrix L, U, P;
@@ -156,7 +133,6 @@ unittest
         return (P * A == L * U);
     }
 
-    // квадратные
     assert(testLUP(Matrix(1, 1, [0])));
     assert(testLUP(Matrix(1, 1, [1])));
     assert(testLUP(Matrix(2, 2, [1, 0,
@@ -191,28 +167,23 @@ unittest
                                  0, 0, 0, 3, 5,
                                  0, 0, 3, 4, 2,
                                  1, 1, 3, 8, 2])));
-    // прямоугольные
-    //assert(testLUP(Matrix(1, 2, [1, 2])));
-    //assert(testLUP(Matrix(3, 4, [0, 2, 3, 4,
-    //                             0, 1, 3, 2,
-    //                             0, 1, 3, 3])));
 }
 
 Matrix LUPsolve(Matrix A, Matrix b)
 {
     auto cols = A.cols;
-    auto x = Col(cols);
-    auto y = Col(cols);
-    Matrix L, U;
+    Matrix x = Col(cols), y = Col(cols), L, U;
     size_t[] p;
+    
     LUP(A, p, L, U);
-    real sum;
+
     foreach(i; 0 .. cols)
     {
         y[i] = b[p[i]];
         foreach(j; 0 .. i)
             y[i] -= L[i, j] * y[j];
     }
+
     foreach_reverse(i; 0 .. cols)
     {
         x[i] = y[i];
@@ -220,20 +191,6 @@ Matrix LUPsolve(Matrix A, Matrix b)
             x[i] -= U[i, j] * x[j];
         x[i] /= U[i, i];
     }
-    return x;
-}
 
-unittest
-{
-    bool testLUPsolve(Matrix A, Matrix b)
-    {
-        auto x = LUPsolve(A, b);
-        return (A * x == b);
-    }
-    //assert(testLUPsolve(Matrix(4, 4, [-7, 2, 1, 2,
-    //                                  3, -9, 2, 4,
-    //                                  7, 1, -13, 3,
-    //                                  9, 4, 1, -15]),
-    //                    Col([-6, 9, -5, -6])
-    //                    ));
+    return x;
 }
