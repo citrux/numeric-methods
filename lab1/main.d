@@ -4,12 +4,15 @@ import std.stdio;
 import std.math;
 import integral;
 
-void main() {
-    writeln("");
-    writeln("sqrt x, 0 .. 9: ");
-    writeln("  * left_rectangles ", left_rectangles(function(real x){return x * x;}, 0, 9, 64));
-    writeln("  * right_rectangles ", right_rectangles(function(real x){return x * x;}, 0, 9, 64));
-    writeln("  * middle_rectangles ", middle_rectangles(function(real x){return x * x;}, 0, 9, 64));
-    writeln("  * trapezoids ", trapezoids(function(real x){return x * x;}, 0, 9, 64));
-    writeln("  * parabolas ", parabolas(function(real x){return x * x;}, 0, 9, 64));
+
+void main()
+{
+    writeln("Интегрирование:");
+    writeln("sqrt x, 0 .. 9 с точностью 0.001: ");
+
+    real left = 0, right = 9, precision = 0.001;
+    auto f = function(real x){return sqrt(x);};
+    
+    writeln(integrate(f, left, right, precision, lagrange(10)));
+    writeln(integrate(f, left, right, precision, polynomial(10)));
 }

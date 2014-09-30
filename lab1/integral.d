@@ -4,72 +4,61 @@ import std.math : abs;
 import matrix;
 import polynomials;
 
-auto integrateStep(real function(real) f, real[] points, real[] weights)
+
+real integrate(real function(real) f,
+               real left, real right, real precision,
+               real delegate(real function(real), real, real) stepFunc)
 {
-    auto g = delegate(real a, real b)
+    auto s1 = integrate(f, left, right, 1, stepFunc);
+    auto s2 = integrate(f, left, right, 2, stepFunc);
+    size_t n = 2;
+    while (abs(s1 - s2) > precision)
     {
-        real result = 0;
-        foreach(i, p; points)
-            result += weights[i] * f((a + b) / 2 + p * (b - a) / 2) * (b - a);
-        return result;
-    };
-    return g;
+        n *= 2;
+        s1 = s2;
+        s2 = integrate(f, left, right, n, stepFunc);
+    }
+    return s2;
 }
 
-auto integrate(real function(real) f, real[] points, real[] weights, real left, real right, size_t count)
+
+real integrate(real function(real) f,
+               real left, real right, size_t count,
+               real delegate(real function(real), real, real) stepFunc)
 {
     auto h = (right - left) / count;
     real result = 0;
     real x = left;
-    auto g = integrateStep(f, points, weights);
     foreach(i; 0 .. count)
     {
-        result += g(x, x + h);
+        result += stepFunc(f, x, x + h);
         x += h;
     }
     return result;
 }
 
-auto integrate(real function(real) f, real[] points, real left, real right, size_t count)
-{
-    return integrate(f, points, weights(points), left, right, count);
-}
 
-auto integrate(real function(real) f, uint n, real left, real right, size_t count)
+auto lagrange(real[] points)
 {
-    auto points = new real[n+1];
-    foreach(i, ref el; points)
-        el = -1.0L + 2.0L / n * i;
-    return integrate(f, points, weights(points), left, right, count);
-}
-
-auto stupidIntegrate(real function(real) f, real[] points)
-{
-    auto n = points.length;
-    auto A = Matrix(n);
-    auto b = Col(n);
-    foreach(i; 0 .. n)
+    auto weights = lagrangeWeights(points);
+    auto stepFunc = delegate(real function(real) f, real left, real right)
     {
-        A[i, 0] = 1;
-        b[i] = f(points[i]);
-        foreach(j; 1 .. n)
-            A[i, j] = A[i, j-1] * points[i];
-    }
-    auto polynomial = LUPsolve(A, b);
-
-    auto limits = Matrix(1, n);
-    real ai = points[0], bi = points[$-1];
-    foreach(i; 0 .. n)
-    {
-        limits[0, i] = (bi - ai) / (i + 1);
-        ai *= points[0];
-        bi *= points[$-1];
-    }
-
-    return (limits * polynomial)[0, 0];
+        real result = 0;
+        foreach(i, p; points)
+            result += weights[i] * f((left + right) / 2 + p * (right - left) / 2) * (right - left);
+        return result;
+    };
+    return stepFunc;
 }
 
-real[] weights(real[] points)
+
+auto lagrange(size_t n)
+{
+    return lagrange(linspace(n));
+}
+
+
+real[] lagrangeWeights(real[] points)
 {
     auto p = polynomialFromRoots(points);
     auto result = new real[points.length];
@@ -82,44 +71,173 @@ real[] weights(real[] points)
     return result;
 }
 
-real right_rectangles(real function(real) f, real left, real right, size_t count)
+
+auto polynomial(real[] points)
 {
-    return integrate(f, [1.0L], left, right, count);
+    auto n = points.length;
+    auto stepFunc = delegate(real function(real) f, real left, real right)
+    {
+        auto ps = new real[n];
+        foreach(i, ref p; ps)
+            p = (right + left) / 2 + points[i] * (right - left) / 2;
+
+        auto A = Matrix(n);
+        auto b = Col(n);
+        foreach(i; 0 .. n)
+        {
+            A[i, 0] = 1;
+            b[i] = f(ps[i]);
+            foreach(j; 1 .. n)
+                A[i, j] = A[i, j-1] * ps[i];
+        }
+        auto polynomial = LUPsolve(A, b);
+
+        auto limits = Matrix(1, n);
+        real ai = ps[0], bi = ps[$-1];
+        foreach(i; 0 .. n)
+        {
+            limits[0, i] = (bi - ai) / (i + 1);
+            ai *= ps[0];
+            bi *= ps[$-1];
+        }
+
+        return (limits * polynomial)[0, 0];
+    };
+    return stepFunc;
 }
 
-real left_rectangles(real function(real) f, real left, real right, size_t count)
+
+auto polynomial(size_t n)
 {
-    return integrate(f, [-1.0L], left, right, count);
+    return polynomial(linspace(n));
 }
 
-real middle_rectangles(real function(real) f, real left, real right, size_t count)
+
+real[] linspace(size_t n)
 {
-    return integrate(f, [0.0L], left, right, count);
+    auto points = new real[n];
+    foreach(i, ref p; points)
+        p = -1 + 2.0L * i / (n - 1); 
+    return points;
 }
 
-real trapezoids(real function(real) f, real left, real right, size_t count)
+
+auto right_rectangles()
 {
-    return integrate(f, 1, left, right, count);
+    return lagrange([1.0L]);
 }
 
-real parabolas(real function(real) f, real left, real right, size_t count)
+auto left_rectangles()
 {
-    return integrate(f, 2, left, right, count);
+    return lagrange([-1.0L]);
+}
+
+auto middle_rectangles()
+{
+    return lagrange([0.0L]);
+}
+
+auto trapezoids()
+{
+    return lagrange([-1.0L, 1.0L]);
+}
+
+auto parabolas()
+{
+    return lagrange([-1.0L, 0.0L, 1.0L]);
 }
 
 unittest
 {
+    import std.math : sin, cos, sqrt, exp, log;
+
     bool test(real output, real answer, real precision)
     {
         return abs(output - answer) < precision;
     }
 
-    assert(test(right_rectangles(function(real x){return 1;}, -1, 1, 5),
-                2, .0001));
-    assert(test(right_rectangles(function(real x){return 1.0L;}, -1, 1, 8),
-                2, .0001));
-    assert(test(middle_rectangles(function(real x){return x;}, -1, 1, 8),
-                0, .0001));
-    assert(test(left_rectangles(function(real x){return x * x;}, -1, 1, 8),
-                2.0 / 3, .1));
+    auto f = function(real x){return sqrt(x);};
+    real left = 0, right = 9, precision = 1e-4, answer = 18;
+
+    assert(test(
+        integrate(f, left, right, precision, lagrange(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, polynomial(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, right_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, left_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, middle_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, parabolas), answer, precision));
+
+    
+    f = function(real x){return sin(x);};
+    left = 0, right = 3.1415926, precision = 1e-4, answer = 2;
+
+    assert(test(
+        integrate(f, left, right, precision, lagrange(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, polynomial(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, right_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, left_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, middle_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, parabolas), answer, precision));
+
+    
+    f = function(real x){return cos(x);};
+    left = 0, right = 3.1415926, precision = 1e-4, answer = 0;
+
+    assert(test(
+        integrate(f, left, right, precision, lagrange(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, polynomial(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, right_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, left_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, middle_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, parabolas), answer, precision));
+
+    
+    f = function(real x){return exp(x);};
+    left = 0, right = 3, precision = 1e-4, answer = exp(right) - exp(left);
+
+    assert(test(
+        integrate(f, left, right, precision, lagrange(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, polynomial(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, right_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, left_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, middle_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, parabolas), answer, precision));
+
+
+    f = function(real x){return log(x);};
+    left = 1, right = 100, precision = 1e-4;
+    answer = right * log(right) - right - left * log(left) + left;
+
+    assert(test(
+        integrate(f, left, right, precision, lagrange(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, polynomial(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, right_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, left_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, middle_rectangles), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, parabolas), answer, precision));
 }
