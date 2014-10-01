@@ -16,5 +16,12 @@ void main()
     
     writeln(integrate(f, left, right, precision, lagrange(10)));
     writeln(integrate(f, left, right, precision, polynomial(10)));
-    writeln(integrate(f, left, right, precision, gaussLejandre(5)));
+    writeln(integrate(f, left, right, precision, gaussLejandre(10)));
+
+    writeln("Интегрирование:");
+    writeln("sqrt x, 0 .. 9 по 5 точкам: ");
+
+    writeln(lagrange(5)(f, left, right));
+    writeln(polynomial(5)(f, left, right));
+    writeln(gaussLejandre(5)(f, left, right));
 }

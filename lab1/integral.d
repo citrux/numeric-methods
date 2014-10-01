@@ -1,8 +1,6 @@
 module integral;
 
 import std.math : abs;
-import std.algorithm : sum;
-import std.stdio;
 import matrix;
 import polynomials;
 
@@ -78,30 +76,16 @@ auto gaussLejandre(size_t n)
     auto d = derivative(lejandrePolynomial(n)).toFunc();
     auto roots = lejandreRoots(n);
 
-    auto A = Matrix(n);
-    auto b = Col(n);
-    foreach(i; 0 .. n)
-    {
-        A[i, 0] = 1;
-        b[i] = (i % 2 == 0) ? 1.0L/(i+1) : 0;
-        foreach(j; 1 .. n)
-            A[i, j] = A[i, j - 1] * roots[i];
-    }
-    auto weights = LUPsolve(A, b);
-    real s = 0;
-    foreach(i; 0 .. n)
-        s += weights[i];
-
-    //auto weights = new real[n];
-    //foreach(i, ref w; weights)
-    //    w = pow((1-roots[i]) * d(roots[i]), -2);
+    auto weights = new real[n];
+    foreach(i, ref x; roots)
+        weights[i] = 1.0L / (1 - x * x) / d(x) / d(x);
 
     auto stepFunc = delegate(real function(real) f, real left, real right)
     {
         real result = 0;
         foreach(i, x; roots)
             result += weights[i] * f((left + right) / 2 + x * (right - left) / 2) * (right - left);
-        return result / s;
+        return result;
     };
     return stepFunc;
 }
@@ -199,6 +183,8 @@ unittest
     assert(test(
         integrate(f, left, right, precision, polynomial(10)), answer, precision));
     assert(test(
+        integrate(f, left, right, precision, gaussLejandre(10)), answer, precision));
+    assert(test(
         integrate(f, left, right, precision, right_rectangles), answer, precision));
     assert(test(
         integrate(f, left, right, precision, left_rectangles), answer, precision));
@@ -215,6 +201,8 @@ unittest
         integrate(f, left, right, precision, lagrange(10)), answer, precision));
     assert(test(
         integrate(f, left, right, precision, polynomial(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, gaussLejandre(10)), answer, precision));
     assert(test(
         integrate(f, left, right, precision, right_rectangles), answer, precision));
     assert(test(
@@ -233,6 +221,8 @@ unittest
     assert(test(
         integrate(f, left, right, precision, polynomial(10)), answer, precision));
     assert(test(
+        integrate(f, left, right, precision, gaussLejandre(10)), answer, precision));
+    assert(test(
         integrate(f, left, right, precision, right_rectangles), answer, precision));
     assert(test(
         integrate(f, left, right, precision, left_rectangles), answer, precision));
@@ -249,6 +239,8 @@ unittest
         integrate(f, left, right, precision, lagrange(10)), answer, precision));
     assert(test(
         integrate(f, left, right, precision, polynomial(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, gaussLejandre(10)), answer, precision));
     assert(test(
         integrate(f, left, right, precision, right_rectangles), answer, precision));
     assert(test(
@@ -267,6 +259,8 @@ unittest
         integrate(f, left, right, precision, lagrange(10)), answer, precision));
     assert(test(
         integrate(f, left, right, precision, polynomial(10)), answer, precision));
+    assert(test(
+        integrate(f, left, right, precision, gaussLejandre(10)), answer, precision));
     assert(test(
         integrate(f, left, right, precision, right_rectangles), answer, precision));
     assert(test(

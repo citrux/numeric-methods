@@ -2,7 +2,6 @@ module polynomials;
 
 import std.math : abs, pow, cos, PI;
 import std.algorithm : swap;
-//import std.stdio;
 
 //  Строим многочлен по известным корням
 //  > вход  : массив корней         [x1, x2, .. , xn]
