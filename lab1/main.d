@@ -3,6 +3,7 @@ module main;
 import std.stdio;
 import std.math;
 import integral;
+import polynomials;
 
 
 void main()
@@ -15,4 +16,5 @@ void main()
     
     writeln(integrate(f, left, right, precision, lagrange(10)));
     writeln(integrate(f, left, right, precision, polynomial(10)));
+    writeln(integrate(f, left, right, precision, gaussLejandre(5)));
 }
