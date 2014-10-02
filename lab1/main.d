@@ -3,10 +3,9 @@ module main;
 import std.stdio;
 import std.math;
 import integral;
-import polynomials;
 
 
-void main()
+void demo()
 {
     real left = 0, right = 4;
     
@@ -65,4 +64,95 @@ void main()
     writeln("gaussLejendre  : ", gaussLejendre(2)(f, left, right));
     writeln("gaussChebyshev : ", gaussChebyshev(2)(f, left, right));
     writeln();
+}
+
+
+void demoAdaptive()
+{
+    real left = 0, right = 4, precision = 1e-3;
+    
+    writeln("Адаптивные методы с точностью ", precision);
+    auto f = function(real x){return 1 / sqrt(x);};    
+    writeln("int_0^4 1 / sqrt(x) dx");
+    //writeln("left_rectangles   : ", integrate(f, left, right, precision, left_rectangles()));
+    //writeln("right_rectangles  : ", integrate(f, left, right, precision, right_rectangles()));
+    //writeln("middle_rectangles : ", integrate(f, left, right, precision, middle_rectangles()));
+    //writeln("parabolas         : ", integrate(f, left, right, precision, parabolas()));
+    writeln("polynomial (5)    : ", integrate(f, left, right, precision, polynomial(5)));
+    writeln("lagrange (5)      : ", integrate(f, left, right, precision, lagrange(5)));
+    writeln("gaussLejendre (5) : ", integrate(f, left, right, precision, gaussLejendre(5)));
+    writeln();
+
+    f = function(real x){return 1 / sqrt(x * (4 - x));};    
+    writeln("int_0^4 1 / sqrt(x(4-x)) dx: ");
+    //writeln("left_rectangles   : ", integrate(f, left, right, precision, left_rectangles()));
+    //writeln("right_rectangles  : ", integrate(f, left, right, precision, right_rectangles()));
+    //writeln("middle_rectangles : ", integrate(f, left, right, precision, middle_rectangles()));
+    //writeln("parabolas         : ", integrate(f, left, right, precision, parabolas()));
+    writeln("polynomial (5)    : ", integrate(f, left, right, precision, polynomial(5)));
+    writeln("lagrange (5)      : ", integrate(f, left, right, precision, lagrange(5)));
+    writeln("gaussLejendre (5) : ", integrate(f, left, right, precision, gaussLejendre(5)));
+    writeln();
+
+    f = function(real x){return sqrt(x * (4 - x));};    
+    writeln("int_0^4 sqrt(x(4-x)) dx: ");
+    writeln("left_rectangles   : ", integrate(f, left, right, precision, left_rectangles()));
+    writeln("right_rectangles  : ", integrate(f, left, right, precision, right_rectangles()));
+    writeln("middle_rectangles : ", integrate(f, left, right, precision, middle_rectangles()));
+    writeln("parabolas         : ", integrate(f, left, right, precision, parabolas()));
+    writeln("polynomial (5)    : ", integrate(f, left, right, precision, polynomial(5)));
+    writeln("lagrange (5)      : ", integrate(f, left, right, precision, lagrange(5)));
+    writeln("gaussLejendre (5) : ", integrate(f, left, right, precision, gaussLejendre(5)));
+    writeln();
+
+    f = function(real x){return sqrt(x);};
+    writeln("int_0^4 sqrt(x) dx: ");
+    writeln("left_rectangles   : ", integrate(f, left, right, precision, left_rectangles()));
+    writeln("right_rectangles  : ", integrate(f, left, right, precision, right_rectangles()));
+    writeln("middle_rectangles : ", integrate(f, left, right, precision, middle_rectangles()));
+    writeln("parabolas         : ", integrate(f, left, right, precision, parabolas()));
+    writeln("polynomial (5)    : ", integrate(f, left, right, precision, polynomial(5)));
+    writeln("lagrange (5)      : ", integrate(f, left, right, precision, lagrange(5)));
+    writeln("gaussLejendre (5) : ", integrate(f, left, right, precision, gaussLejendre(5)));
+    writeln();
+
+    f = function(real x){return x;};
+    writeln("int_0^4 x dx: ");
+    writeln("left_rectangles   : ", integrate(f, left, right, precision, left_rectangles()));
+    writeln("right_rectangles  : ", integrate(f, left, right, precision, right_rectangles()));
+    writeln("middle_rectangles : ", integrate(f, left, right, precision, middle_rectangles()));
+    writeln("parabolas         : ", integrate(f, left, right, precision, parabolas()));
+    writeln("polynomial (5)    : ", integrate(f, left, right, precision, polynomial(5)));
+    writeln("lagrange (5)      : ", integrate(f, left, right, precision, lagrange(5)));
+    writeln("gaussLejendre (5) : ", integrate(f, left, right, precision, gaussLejendre(5)));
+    writeln();
+
+    f = function(real x){return 1;};
+    writeln("int_0^4 dx: ");
+    writeln("left_rectangles   : ", integrate(f, left, right, precision, left_rectangles()));
+    writeln("right_rectangles  : ", integrate(f, left, right, precision, right_rectangles()));
+    writeln("middle_rectangles : ", integrate(f, left, right, precision, middle_rectangles()));
+    writeln("parabolas         : ", integrate(f, left, right, precision, parabolas()));
+    writeln("polynomial (5)    : ", integrate(f, left, right, precision, polynomial(5)));
+    writeln("lagrange (5)      : ", integrate(f, left, right, precision, lagrange(5)));
+    writeln("gaussLejendre (5) : ", integrate(f, left, right, precision, gaussLejendre(5)));
+    writeln();
+
+    f = function(real x){return 1 + x + x * x + x * x * x;};
+    writeln("int_0^4 x^3 + x^2 + x + 1 dx: ");
+    writeln("left_rectangles   : ", integrate(f, left, right, precision, left_rectangles()));
+    writeln("right_rectangles  : ", integrate(f, left, right, precision, right_rectangles()));
+    writeln("middle_rectangles : ", integrate(f, left, right, precision, middle_rectangles()));
+    writeln("parabolas         : ", integrate(f, left, right, precision, parabolas()));
+    writeln("polynomial (5)    : ", integrate(f, left, right, precision, polynomial(5)));
+    writeln("lagrange (5)      : ", integrate(f, left, right, precision, lagrange(5)));
+    writeln("gaussLejendre (5) : ", integrate(f, left, right, precision, gaussLejendre(5)));
+    writeln();
+}
+
+
+void main()
+{
+    demo();   
+    demoAdaptive(); 
 }
