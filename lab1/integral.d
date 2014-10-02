@@ -1,6 +1,6 @@
 module integral;
 
-import std.math : abs, sqrt, sin, cos, acos, PI;
+import std.math : abs, sqrt, cos, PI;
 import matrix;
 import polynomials;
 
@@ -90,7 +90,7 @@ auto gaussLejandre(size_t n)
     return stepFunc;
 }
 
-auto gaussChebyshevMod(size_t n)
+auto gaussChebyshev(size_t n)
 { 
     auto roots = new real[n];
     auto weights = new real[n];
@@ -98,11 +98,7 @@ auto gaussChebyshevMod(size_t n)
     foreach(i; 0 .. n)
     {
         roots[i] = cos(PI * (2 * i + 1) / (2 * n));
-    
-        real sum = 0;
-        foreach(m; 1 .. n)
-            sum += 2.0L / (4 * m * m - 1) * cos(2 * m * acos(roots[i]));
-        weights[i] = 1.0L / n * (1.0L - sum);
+        weights[i] = 0.5 * PI / n * sqrt(1 - roots[i] * roots[i]);
     }
 
     auto stepFunc = delegate(real function(real) f, real left, real right)
