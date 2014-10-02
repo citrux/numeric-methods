@@ -8,20 +8,37 @@ import polynomials;
 
 void main()
 {
-    writeln("Интегрирование:");
-    writeln("sqrt x, 0 .. 9 с точностью 0.001: ");
-
-    real left = 0, right = 9, precision = 0.001;
-    auto f = function(real x){return sqrt(x);};
+    real left = 0, right = 4;
     
-    writeln(integrate(f, left, right, precision, lagrange(10)));
-    writeln(integrate(f, left, right, precision, polynomial(10)));
-    writeln(integrate(f, left, right, precision, gaussLejandre(10)));
+    auto f = function(real x){return 1 / sqrt(x);};    
+    writeln("int_0^4 1 / sqrt(x) dx по 15 точкам: ");
+    writeln("lagrange          : ", lagrange(15)(f, left, right));
+    writeln("polynomial        : ", polynomial(15)(f, left, right));
+    writeln("gaussLejandre     : ", gaussLejandre(15)(f, left, right));
+    writeln("gaussChebyshevMod : ", gaussChebyshevMod(15)(f, left, right));
+    writeln();
 
-    writeln("Интегрирование:");
-    writeln("sqrt x, 0 .. 9 по 5 точкам: ");
+    f = function(real x){return sqrt(x);};
+    writeln("int_0^4 sqrt(x) dx по 15 точкам: ");
+    writeln("lagrange          : ", lagrange(15)(f, left, right));
+    writeln("polynomial        : ", polynomial(15)(f, left, right));
+    writeln("gaussLejandre     : ", gaussLejandre(15)(f, left, right));
+    writeln("gaussChebyshevMod : ", gaussChebyshevMod(15)(f, left, right));
+    writeln();
 
-    writeln(lagrange(5)(f, left, right));
-    writeln(polynomial(5)(f, left, right));
-    writeln(gaussLejandre(5)(f, left, right));
+    f = function(real x){return x;};
+    writeln("int_0^4 x dx по 15 точкам: ");
+    writeln("lagrange          : ", lagrange(15)(f, left, right));
+    writeln("polynomial        : ", polynomial(15)(f, left, right));
+    writeln("gaussLejandre     : ", gaussLejandre(15)(f, left, right));
+    writeln("gaussChebyshevMod : ", gaussChebyshevMod(15)(f, left, right));
+    writeln();
+
+    f = function(real x){return 1;};
+    writeln("int_0^4 dx по 15 точкам: ");
+    writeln("lagrange          : ", lagrange(15)(f, left, right));
+    writeln("polynomial        : ", polynomial(15)(f, left, right));
+    writeln("gaussLejandre     : ", gaussLejandre(15)(f, left, right));
+    writeln("gaussChebyshevMod : ", gaussChebyshevMod(15)(f, left, right));
+    writeln();
 }

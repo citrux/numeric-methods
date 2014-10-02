@@ -60,7 +60,7 @@ real integratePolynomial(real[] polynomial)
     foreach(i, el; polynomial)
         if (i % 2 == 0)
             result += polynomial[i] / (i + 1);
-    return 2 * result; 
+    return 2 * result;
 }
 
 //  Дифференцирует многочлен
@@ -88,7 +88,7 @@ auto toFunc(real[] polynomial)
 real[] lejandrePolynomial(size_t n)
 {
     real[] a = [1], b = [0, 1];
-    
+
     if (n == 0)
         return a;
     if (n == 1)
@@ -112,10 +112,10 @@ real[] lejandreRoots(size_t n)
 {
     auto p_n = lejandrePolynomial(n);
     auto dp_n = derivative(p_n);
-   
+
     auto f = p_n.toFunc();
     auto d = dp_n.toFunc();
-   
+
     auto result = new real[n];
     real delta;
 

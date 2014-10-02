@@ -1,6 +1,6 @@
 module integral;
 
-import std.math : abs;
+import std.math : abs, sqrt, sin, cos, acos, PI;
 import matrix;
 import polynomials;
 
@@ -45,8 +45,8 @@ auto lagrange(real[] points)
     {
         real result = 0;
         foreach(i, p; points)
-            result += weights[i] * f((left + right) / 2 + p * (right - left) / 2) * (right - left);
-        return result;
+            result += weights[i] * f((left + right) / 2 + p * (right - left) / 2);
+        return result * (right - left);
     };
     return stepFunc;
 }
@@ -84,12 +84,36 @@ auto gaussLejandre(size_t n)
     {
         real result = 0;
         foreach(i, x; roots)
-            result += weights[i] * f((left + right) / 2 + x * (right - left) / 2) * (right - left);
-        return result;
+            result += weights[i] * f((left + right) / 2 + x * (right - left) / 2);
+        return result * (right - left);
     };
     return stepFunc;
 }
 
+auto gaussChebyshevMod(size_t n)
+{ 
+    auto roots = new real[n];
+    auto weights = new real[n];
+
+    foreach(i; 0 .. n)
+    {
+        roots[i] = cos(PI * (2 * i + 1) / (2 * n));
+    
+        real sum = 0;
+        foreach(m; 1 .. n)
+            sum += 2.0L / (4 * m * m - 1) * cos(2 * m * acos(roots[i]));
+        weights[i] = 1.0L / n * (1.0L - sum);
+    }
+
+    auto stepFunc = delegate(real function(real) f, real left, real right)
+    {
+        real result = 0;
+        foreach(i, x; roots)
+            result += weights[i] * f((left + right) / 2 + x * (right - left) / 2);
+        return result * (right - left);
+    };
+    return stepFunc;
+}
 
 auto polynomial(real[] points)
 {
