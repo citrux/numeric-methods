@@ -54,7 +54,7 @@ auto lagrange(real[] points)
 
 auto lagrange(size_t n)
 {
-    return lagrange(linspace(n));
+    return lagrange(chebyshevRoots(n));
 }
 
 
@@ -71,10 +71,10 @@ real[] lagrangeWeights(real[] points)
     return result;
 }
 
-auto gaussLejandre(size_t n)
+auto gaussLejendre(size_t n)
 {
-    auto d = derivative(lejandrePolynomial(n)).toFunc();
-    auto roots = lejandreRoots(n);
+    auto d = derivative(lejendrePolynomial(n)).toFunc();
+    auto roots = lejendreRoots(n);
 
     auto weights = new real[n];
     foreach(i, ref x; roots)
@@ -92,14 +92,11 @@ auto gaussLejandre(size_t n)
 
 auto gaussChebyshev(size_t n)
 { 
-    auto roots = new real[n];
+    auto roots = chebyshevRoots(n);
     auto weights = new real[n];
 
-    foreach(i; 0 .. n)
-    {
-        roots[i] = cos(PI * (2 * i + 1) / (2 * n));
-        weights[i] = 0.5 * PI / n * sqrt(1 - roots[i] * roots[i]);
-    }
+    foreach(i, x; roots)
+        weights[i] = 0.5 * PI / n * sqrt(1 - x * x);
 
     auto stepFunc = delegate(real function(real) f, real left, real right)
     {
@@ -132,12 +129,12 @@ auto polynomial(real[] points)
         auto polynomial = LUPsolve(A, b);
 
         auto limits = Matrix(1, n);
-        real ai = ps[0], bi = ps[$-1];
+        real li = left, ri = right;
         foreach(i; 0 .. n)
         {
-            limits[0, i] = (bi - ai) / (i + 1);
-            ai *= ps[0];
-            bi *= ps[$-1];
+            limits[0, i] = (ri - li) / (i + 1);
+            li *= left;
+            ri *= right;
         }
 
         return (limits * polynomial)[0, 0];
@@ -148,16 +145,7 @@ auto polynomial(real[] points)
 
 auto polynomial(size_t n)
 {
-    return polynomial(linspace(n));
-}
-
-
-real[] linspace(size_t n)
-{
-    auto points = new real[n];
-    foreach(i, ref p; points)
-        p = -1 + 2.0L * i / (n - 1); 
-    return points;
+    return polynomial(chebyshevRoots(n));
 }
 
 
@@ -203,7 +191,7 @@ unittest
     assert(test(
         integrate(f, left, right, precision, polynomial(10)), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, gaussLejandre(10)), answer, precision));
+        integrate(f, left, right, precision, gaussLejendre(10)), answer, precision));
     assert(test(
         integrate(f, left, right, precision, right_rectangles), answer, precision));
     assert(test(
@@ -222,7 +210,7 @@ unittest
     assert(test(
         integrate(f, left, right, precision, polynomial(10)), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, gaussLejandre(10)), answer, precision));
+        integrate(f, left, right, precision, gaussLejendre(10)), answer, precision));
     assert(test(
         integrate(f, left, right, precision, right_rectangles), answer, precision));
     assert(test(
@@ -241,7 +229,7 @@ unittest
     assert(test(
         integrate(f, left, right, precision, polynomial(10)), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, gaussLejandre(10)), answer, precision));
+        integrate(f, left, right, precision, gaussLejendre(10)), answer, precision));
     assert(test(
         integrate(f, left, right, precision, right_rectangles), answer, precision));
     assert(test(
@@ -260,7 +248,7 @@ unittest
     assert(test(
         integrate(f, left, right, precision, polynomial(10)), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, gaussLejandre(10)), answer, precision));
+        integrate(f, left, right, precision, gaussLejendre(10)), answer, precision));
     assert(test(
         integrate(f, left, right, precision, right_rectangles), answer, precision));
     assert(test(
@@ -280,7 +268,7 @@ unittest
     assert(test(
         integrate(f, left, right, precision, polynomial(10)), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, gaussLejandre(10)), answer, precision));
+        integrate(f, left, right, precision, gaussLejendre(10)), answer, precision));
     assert(test(
         integrate(f, left, right, precision, right_rectangles), answer, precision));
     assert(test(

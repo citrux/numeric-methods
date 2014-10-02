@@ -85,7 +85,7 @@ auto toFunc(real[] polynomial)
 // Построение n-го многочлена Лежандра
 // > вход : n -- порядок многочлена Лежандра
 // < выход : массив коэффициентов [a0, .. , an]
-real[] lejandrePolynomial(size_t n)
+real[] lejendrePolynomial(size_t n)
 {
     real[] a = [1], b = [0, 1];
 
@@ -108,9 +108,9 @@ real[] lejandrePolynomial(size_t n)
 // Нахождение корней полинома Лежандра
 // > вход : n -- порядок многочлена Лежандра
 // < выход : массив корней [x0, .. , xn-1]
-real[] lejandreRoots(size_t n)
+real[] lejendreRoots(size_t n)
 {
-    auto p_n = lejandrePolynomial(n);
+    auto p_n = lejendrePolynomial(n);
     auto dp_n = derivative(p_n);
 
     auto f = p_n.toFunc();
@@ -129,4 +129,15 @@ real[] lejandreRoots(size_t n)
         } while(abs(delta) > 2.0e-4 / n);
     }
     return result;
+}
+
+// Нахождение корней полинома Чебышёва
+// > вход : n -- порядок многочлена Чебышёва
+// < выход : массив корней [x0, .. , xn-1]
+real[] chebyshevRoots(size_t n)
+{
+    auto points = new real[n];
+    foreach(i, ref p; points)
+        p = cos(PI * (i + 0.5) / n); 
+    return points;
 }
