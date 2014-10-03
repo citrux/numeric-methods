@@ -110,11 +110,11 @@ real[] lejendrePolynomial(size_t n)
 // < выход : массив корней [x0, .. , xn-1]
 real[] lejendreRoots(size_t n)
 {
-    auto p_n = lejendrePolynomial(n);
-    auto dp_n = derivative(p_n);
+    auto pn = lejendrePolynomial(n);
+    auto dpn = derivative(pn);
 
-    auto f = p_n.toFunc();
-    auto d = dp_n.toFunc();
+    auto f = pn.toFunc();
+    auto d = dpn.toFunc();
 
     auto result = new real[n];
     real delta;
@@ -138,6 +138,7 @@ real[] chebyshevRoots(size_t n)
 {
     auto points = new real[n];
     foreach(i, ref p; points)
-        p = cos(PI * (i + 0.5) / n); 
+        p = cos(PI * (i + 0.5) / n);
     return points;
 }
+

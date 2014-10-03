@@ -91,7 +91,7 @@ auto gaussLejendre(size_t n)
 }
 
 auto gaussChebyshev(size_t n)
-{ 
+{
     auto roots = chebyshevRoots(n);
     auto weights = new real[n];
 
@@ -149,17 +149,17 @@ auto polynomial(size_t n)
 }
 
 
-auto right_rectangles()
+auto rightRectangles()
 {
     return lagrange([1.0L]);
 }
 
-auto left_rectangles()
+auto leftRectangles()
 {
     return lagrange([-1.0L]);
 }
 
-auto middle_rectangles()
+auto middleRectangles()
 {
     return lagrange([0.0L]);
 }
@@ -193,15 +193,15 @@ unittest
     assert(test(
         integrate(f, left, right, precision, gaussLejendre(10)), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, right_rectangles), answer, precision));
+        integrate(f, left, right, precision, rightRectangles), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, left_rectangles), answer, precision));
+        integrate(f, left, right, precision, leftRectangles), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, middle_rectangles), answer, precision));
+        integrate(f, left, right, precision, middleRectangles), answer, precision));
     assert(test(
         integrate(f, left, right, precision, parabolas), answer, precision));
 
-    
+
     f = function(real x){return sin(x);};
     left = 0, right = 3.1415926, precision = 1e-4, answer = 2;
 
@@ -212,15 +212,15 @@ unittest
     assert(test(
         integrate(f, left, right, precision, gaussLejendre(10)), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, right_rectangles), answer, precision));
+        integrate(f, left, right, precision, rightRectangles), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, left_rectangles), answer, precision));
+        integrate(f, left, right, precision, leftRectangles), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, middle_rectangles), answer, precision));
+        integrate(f, left, right, precision, middleRectangles), answer, precision));
     assert(test(
         integrate(f, left, right, precision, parabolas), answer, precision));
 
-    
+
     f = function(real x){return cos(x);};
     left = 0, right = 3.1415926, precision = 1e-4, answer = 0;
 
@@ -231,15 +231,15 @@ unittest
     assert(test(
         integrate(f, left, right, precision, gaussLejendre(10)), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, right_rectangles), answer, precision));
+        integrate(f, left, right, precision, rightRectangles), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, left_rectangles), answer, precision));
+        integrate(f, left, right, precision, leftRectangles), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, middle_rectangles), answer, precision));
+        integrate(f, left, right, precision, middleRectangles), answer, precision));
     assert(test(
         integrate(f, left, right, precision, parabolas), answer, precision));
 
-    
+
     f = function(real x){return exp(x);};
     left = 0, right = 3, precision = 1e-4, answer = exp(right) - exp(left);
 
@@ -250,11 +250,11 @@ unittest
     assert(test(
         integrate(f, left, right, precision, gaussLejendre(10)), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, right_rectangles), answer, precision));
+        integrate(f, left, right, precision, rightRectangles), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, left_rectangles), answer, precision));
+        integrate(f, left, right, precision, leftRectangles), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, middle_rectangles), answer, precision));
+        integrate(f, left, right, precision, middleRectangles), answer, precision));
     assert(test(
         integrate(f, left, right, precision, parabolas), answer, precision));
 
@@ -270,11 +270,11 @@ unittest
     assert(test(
         integrate(f, left, right, precision, gaussLejendre(10)), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, right_rectangles), answer, precision));
+        integrate(f, left, right, precision, rightRectangles), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, left_rectangles), answer, precision));
+        integrate(f, left, right, precision, leftRectangles), answer, precision));
     assert(test(
-        integrate(f, left, right, precision, middle_rectangles), answer, precision));
+        integrate(f, left, right, precision, middleRectangles), answer, precision));
     assert(test(
         integrate(f, left, right, precision, parabolas), answer, precision));
 }

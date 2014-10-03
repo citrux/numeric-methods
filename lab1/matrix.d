@@ -7,16 +7,16 @@ import std.algorithm : swap;
 /***
     Структура для матрицы
 ***/
-struct Matrix 
+struct Matrix
 {
     private size_t _rows, _cols;
     private real[] _data;
-    
+
     @property const size_t rows() {return _rows;};
     @property const size_t cols() {return _cols;};
-    
+
     ref real opIndex(size_t i, size_t j=0) {return _data[i * _cols + j];};
-    
+
     Matrix opBinary(string op)(Matrix B)
     if (op == "*")
     {
@@ -27,20 +27,20 @@ struct Matrix
                     result[i, j] += this[i, k] * B[k, j];
         return result;
     }
-    
+
     void swapRows(size_t i1, size_t i2)
     {
         foreach(j; 0 .. _cols)
             swap(this[i1, j], this[i2, j]);
     }
-    
+
     this(size_t rows, size_t cols, real[] data)
     {
         _rows = rows;
         _cols = cols;
         _data = data;
     }
-    
+
     this(size_t rows, size_t cols)
     {
         _rows = rows;
@@ -49,9 +49,9 @@ struct Matrix
         foreach(ref el; _data)
             el = 0;
     }
-    
+
     this(size_t size) {this(size, size);}
-    
+
     this(this) {_data = _data.dup;};
 }
 
@@ -174,7 +174,7 @@ Matrix LUPsolve(Matrix A, Matrix b)
     auto cols = A.cols;
     Matrix x = Col(cols), y = Col(cols), L, U;
     size_t[] p;
-    
+
     LUP(A, p, L, U);
 
     foreach(i; 0 .. cols)
