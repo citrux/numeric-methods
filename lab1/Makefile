@@ -1,9 +1,10 @@
-DC=dmd
-DFLAGS=-O -release
+DC=gdmd
+RELEASE_FLAGS=-O -release -noboundscheck -inline
+DEBUG_FLAGS=-unittest -g
 SOURCES=main.d matrix.d integral.d polynomials.d
 
 all:
-	$(DC) $(DFLAGS) $(SOURCES)
+	$(DC) $(RELEASE_FLAGS) $(SOURCES)
 
 debug:
-	$(DC) -unittest -g $(SOURCES)
+	$(DC) $(DEBUG_FLAGS) $(SOURCES)
