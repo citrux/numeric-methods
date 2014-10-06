@@ -19,8 +19,8 @@ real[] polynomialFromRoots(real[] roots)
 //  < выход : массив коэффициентов  [b0, b1, .. , bn+1]
 real[] addRoot(real[] polynomial, real root)
 {
-    auto result = [0.0L] ~ polynomial;
-    auto p = polynomial ~ [0.0L];
+    auto result = 0.0L ~ polynomial;
+    auto p = polynomial ~ 0.0L;
     foreach(i, ref el; result)
         el -= root * p[i];
     return result;
@@ -43,10 +43,8 @@ real calculatePolynomial(real[] polynomial, real point)
 real[] removeRoot(real[] polynomial, real root)
 {
     auto result = new real[polynomial.length - 1];
-    foreach_reverse(i, ref el; result)
-        if (i == result.length - 1)
-            el = polynomial[i + 1];
-        else
+    result[$ - 1] = polynomial[$ - 1];
+    foreach_reverse(i, ref el; result[0 .. $ - 1])
             el = polynomial[i + 1] + result[i + 1] * root;
     return result;
 }
@@ -59,7 +57,7 @@ real integratePolynomial(real[] polynomial)
     real result = 0;
     foreach(i, el; polynomial)
         if (i % 2 == 0)
-            result += polynomial[i] / (i + 1);
+            result += el / (i + 1);
     return 2 * result;
 }
 
