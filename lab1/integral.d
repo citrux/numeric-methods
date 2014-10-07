@@ -102,30 +102,28 @@ auto gaussChebyshev(alias f)(real left, real right, size_t n)
 auto polynomial(alias f)(real left, real right, real[] points)
 {
     auto n = points.length;
+
     auto ps = new real[n];
     foreach(i, ref p; ps)
         p = (right + left) / 2 + points[i] * (right - left) / 2;
 
     auto A = Matrix(n);
     auto b = Col(n);
-    foreach(i; 0 .. n)
+    foreach(i, p; points)
     {
         A[i, 0] = 1;
         b[i] = f(ps[i]);
         foreach(j; 1 .. n)
-            A[i, j] = A[i, j-1] * ps[i];
+            A[i, j] = A[i, j-1] * p;
     }
     auto polynomial = LUPsolve(A, b);
 
     real result = 0;
-    real li = 1, ri = 1;
     foreach(i; 0 .. n)
-    {
-        li *= left;
-        ri *= right;
-        result += polynomial[i] * (ri - li) / (i + 1);
-    }
-    return result;
+        if (i % 2 == 0)
+            result += polynomial[i] / (i + 1);
+
+    return result * (right - left);
 }
 
 
@@ -214,8 +212,8 @@ unittest
 
     assert(test(
         integrate!(lagrange, f)(left, right, precision), answer, precision));
-    //assert(test(
-        //integrate!(polynomial, f)(left, right, precision), answer, precision));
+    assert(test(
+        integrate!(polynomial, f)(left, right, precision), answer, precision));
     assert(test(
         integrate!(gaussLejendre, f)(left, right, precision), answer, precision));
     assert(test(
@@ -291,8 +289,8 @@ unittest
 
     assert(test(
         integrate!(lagrange, f)(left, right, precision), answer, precision));
-    //assert(test(
-        //integrate!(polynomial, f)(left, right, precision), answer, precision));
+    assert(test(
+        integrate!(polynomial, f)(left, right, precision), answer, precision));
     assert(test(
         integrate!(gaussLejendre, f)(left, right, precision), answer, precision));
     assert(test(
