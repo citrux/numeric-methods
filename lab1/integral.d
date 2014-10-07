@@ -1,6 +1,6 @@
 module integral;
 
-import std.math : abs, sqrt, cos, PI;
+import std.math : abs, sqrt, cos, tanh, sinh, cosh, PI;
 import matrix;
 import polynomials;
 
@@ -134,6 +134,46 @@ auto polynomial(alias f)(real left, real right, size_t n)
     return polynomial!f(left, right, chebyshevRoots(n));
 }
 
+real tanhSinh(alias f)(real left, real right)
+{
+    uint m = 5;
+    real h = 1.0L / pow(2, m);
+    uint n = 2 * pow(2, m);
+
+    // рассчитываем узлы и веса
+    auto points = new real[n];
+    auto weights = new real[n];
+
+    foreach(k; 0 .. n)
+    {
+        points[k] = tanh(0.5 * PI * sinh(k * h));
+        weights[k] = 0.5 * PI * cosh(k * h) /
+                    pow(cosh(0.5 * PI * sinh(k * h)), 2);
+    }
+
+    // Далее хитро суммируем для большей точности
+    real result = 0;
+    h = 1;
+    foreach(k; 0 .. m)
+    {
+        h = h / 2;
+        uint i = 0;
+        while (i < n)
+        {
+            if (i % pow(2, m-k) || k == 0)
+            {
+                auto p1 = (left + right) / 2 + points[i] * (right - left) / 2;
+                auto p2 = (left + right) / 2 - points[i] * (right - left) / 2;
+                if (i == 0)
+                    result += weights[i] * f(p1);
+                else
+                    result += weights[i] * (f(p1) + f(p2));
+            }
+            i += pow(2, m - k - 1);
+        }
+    }
+    return result * h * (right - left) / 2;
+}
 
 auto rightRectangles(alias f)(real left, real right, size_t count)
 {

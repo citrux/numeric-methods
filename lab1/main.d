@@ -15,6 +15,7 @@ void demo()
     writeln("polynomial     : ", polynomial!f(left, right, 5));
     writeln("gaussLejendre  : ", gaussLejendre!f(left, right, 5));
     writeln("gaussChebyshev : ", gaussChebyshev!f(left, right, 5));
+    writeln("tanh-sinh      : ", tanhSinh!f(left, right));
     writeln();
 
     f = function(real x){return 1 / sqrt(x * (4 - x));};
@@ -23,6 +24,7 @@ void demo()
     writeln("polynomial     : ", polynomial!f(left, right, 3));
     writeln("gaussLejendre  : ", gaussLejendre!f(left, right, 3));
     writeln("gaussChebyshev : ", gaussChebyshev!f(left, right, 3));
+    writeln("tanh-sinh      : ", tanhSinh!f(left, right));
     writeln();
 
     f = function(real x){return sqrt(x * (4 - x));};
@@ -31,6 +33,7 @@ void demo()
     writeln("polynomial     : ", polynomial!f(left, right, 3));
     writeln("gaussLejendre  : ", gaussLejendre!f(left, right, 3));
     writeln("gaussChebyshev : ", gaussChebyshev!f(left, right, 3));
+    writeln("tanh-sinh      : ", tanhSinh!f(left, right));
     writeln();
 
     f = function(real x){return sqrt(x);};
@@ -39,6 +42,7 @@ void demo()
     writeln("polynomial     : ", polynomial!f(left, right, 15));
     writeln("gaussLejendre  : ", gaussLejendre!f(left, right, 15));
     writeln("gaussChebyshev : ", gaussChebyshev!f(left, right, 15));
+    writeln("tanh-sinh      : ", tanhSinh!f(left, right));
     writeln();
 
     f = function(real x){return x;};
@@ -47,6 +51,7 @@ void demo()
     writeln("polynomial     : ", polynomial!f(left, right, 2));
     writeln("gaussLejendre  : ", gaussLejendre!f(left, right, 2));
     writeln("gaussChebyshev : ", gaussChebyshev!f(left, right, 2));
+    writeln("tanh-sinh      : ", tanhSinh!f(left, right));
     writeln();
 
     f = function(real x){return 1;};
@@ -55,6 +60,7 @@ void demo()
     writeln("polynomial     : ", polynomial!f(left, right, 15));
     writeln("gaussLejendre  : ", gaussLejendre!f(left, right, 15));
     writeln("gaussChebyshev : ", gaussChebyshev!f(left, right, 15));
+    writeln("tanh-sinh      : ", tanhSinh!f(left, right));
     writeln();
 
     f = function(real x){return 1 + x + x * x + x * x * x;};
@@ -63,6 +69,7 @@ void demo()
     writeln("polynomial     : ", polynomial!f(left, right, 2));
     writeln("gaussLejendre  : ", gaussLejendre!f(left, right, 2));
     writeln("gaussChebyshev : ", gaussChebyshev!f(left, right, 2));
+    writeln("tanh-sinh      : ", tanhSinh!f(left, right));
     writeln();
 }
 
