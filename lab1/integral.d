@@ -6,9 +6,9 @@ import polynomials;
 
 real integrate(alias method, alias f)(real left, real right, real precision)
 {
-    auto s1 = method!f(left, right, 1);
-    auto s2 = method!f(left, right, 2);
-    size_t n = 2;
+    auto s1 = method!f(left, right, 4);
+    auto s2 = method!f(left, right, 8);
+    size_t n = 8;
     real delta = abs(s2 - s1);
     while (delta > precision)
     {
@@ -132,44 +132,22 @@ auto polynomial(alias f)(real left, real right, size_t n)
     return polynomial!f(left, right, chebyshevRoots(n));
 }
 
-real tanhSinh(alias f)(real left, real right)
+real tanhSinh(alias f)(real left, real right, size_t n)
 {
-    uint m = 5;
-    real h = 1.0L / pow(2, m);
-    uint n = 2 * pow(2, m);
+    real max = 3.0L;
+    real h = 2 * max / (n - 1);
 
-    // рассчитываем узлы и веса
-    auto points = new real[n];
-    auto weights = new real[n];
-
+    real result = 0;
     foreach(k; 0 .. n)
     {
-        points[k] = tanh(0.5 * PI * sinh(k * h));
-        weights[k] = 0.5 * PI * cosh(k * h) /
-                    pow(cosh(0.5 * PI * sinh(k * h)), 2);
+        auto x = -max + k * h;
+        auto p = tanh(0.5 * PI * sinh(x));
+        auto w = 0.5 * PI * cosh(x) /
+                    pow(cosh(0.5 * PI * sinh(x)), 2);
+        auto p1 = (left + right) / 2 + p * (right - left) / 2;
+        result += w * f(p1);
     }
 
-    // Далее хитро суммируем для большей точности
-    real result = 0;
-    h = 1;
-    foreach(k; 0 .. m)
-    {
-        h = h / 2;
-        uint i = 0;
-        while (i < n)
-        {
-            if (i % pow(2, m-k) || k == 0)
-            {
-                auto p1 = (left + right) / 2 + points[i] * (right - left) / 2;
-                auto p2 = (left + right) / 2 - points[i] * (right - left) / 2;
-                if (i == 0)
-                    result += weights[i] * f(p1);
-                else
-                    result += weights[i] * (f(p1) + f(p2));
-            }
-            i += pow(2, m - k - 1);
-        }
-    }
     return result * h * (right - left) / 2;
 }
 
