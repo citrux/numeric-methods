@@ -134,21 +134,15 @@ auto polynomial(alias f)(real left, real right, size_t n)
 
 real tanhSinh(alias f)(real left, real right, size_t n)
 {
-    real max = 3.0L;
-    real h = 2 * max / (n - 1);
-
-    real result = 0;
-    foreach(k; 0 .. n)
+    auto g = delegate(real t)
     {
-        auto x = -max + k * h;
-        auto p = tanh(0.5 * PI * sinh(x));
-        auto w = 0.5 * PI * cosh(x) /
-                    pow(cosh(0.5 * PI * sinh(x)), 2);
-        auto p1 = (left + right) / 2 + p * (right - left) / 2;
-        result += w * f(p1);
-    }
-
-    return result * h * (right - left) / 2;
+        auto y = tanh(0.5 * PI * sinh(t));
+        auto w = 0.5 * PI * cosh(t) /
+                    pow(cosh(0.5 * PI * sinh(t)), 2);
+        auto x = (left + right) / 2 + y * (right - left) / 2;
+        return w * f(x);
+    };
+    return (right - left) / 2 * middleRectangles!g(-3, 3, n);
 }
 
 auto rightRectangles(alias f)(real left, real right, size_t count)
