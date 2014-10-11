@@ -3,6 +3,7 @@ module polynomials;
 import std.math : abs, pow, cos, PI;
 import std.algorithm : swap;
 
+
 //  Строим многочлен по известным корням
 //  > вход  : массив корней         [x1, x2, .. , xn]
 //  < выход : массив коэффициентов  [a0, a1, .. , an]
@@ -13,6 +14,7 @@ real[] polynomialFromRoots(real[] roots)
         result = result.addRoot(x);
     return result;
 }
+
 
 //  Умножаем многочлен на (x - root)
 //  > вход  : массив коэффициентов  [a0, a1, .. , an] и число root
@@ -26,6 +28,7 @@ real[] addRoot(real[] polynomial, real root)
     return result;
 }
 
+
 //  Считаем значение многочлена в точке point
 //  > вход  : массив коэффициентов  [a0, a1, .. , an] и число point
 //  < выход : число P(point)
@@ -36,6 +39,7 @@ real calculatePolynomial(real[] polynomial, real point)
         result += el * pow(point, i);
     return result;
 }
+
 
 //  Делит многочлен на (x - root)
 //  > вход  : массив коэффициентов  [a0, a1, .. , an] и число root
@@ -49,6 +53,7 @@ real[] removeRoot(real[] polynomial, real root)
     return result;
 }
 
+
 //  Интегрируем многочлен на отрезке [-1, 1]
 //  > вход  : массив коэффициентов  [a0, a1, .. , an]
 //  < выход : число -- значение интеграла
@@ -61,6 +66,7 @@ real integratePolynomial(real[] polynomial)
     return 2 * result;
 }
 
+
 //  Дифференцирует многочлен
 //  > вход  : массив коэффициентов  [a0, a1, .. , an]
 //  < выход : массив коэффициентов  [b0, b1, .. , bn-1]
@@ -72,6 +78,7 @@ real[] derivative(real[] polynomial)
     return result;
 }
 
+
 //  Превращает массив коэффициентов в функцию
 //  > вход  : массив коэффициентов  [a0, a1, .. , an]
 //  < выход : функция P_n(x)
@@ -79,6 +86,7 @@ auto toFunc(real[] polynomial)
 {
     return delegate(real x){return calculatePolynomial(polynomial, x);};
 }
+
 
 // Построение n-го многочлена Лежандра
 // > вход : n -- порядок многочлена Лежандра
@@ -102,6 +110,7 @@ real[] lejendrePolynomial(size_t n)
     }
     return b;
 }
+
 
 // Нахождение корней полинома Лежандра
 // > вход : n -- порядок многочлена Лежандра
@@ -128,6 +137,7 @@ real[] lejendreRoots(size_t n)
     }
     return result;
 }
+
 
 // Нахождение корней полинома Чебышёва
 // > вход : n -- порядок многочлена Чебышёва
