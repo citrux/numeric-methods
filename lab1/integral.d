@@ -97,7 +97,7 @@ auto polynomial(alias f)(real left, real right, real[] points)
         foreach(j; 1 .. n)
             A[i, j] = A[i, j-1] * p;
     }
-    auto polynomial = LUPsolve(A, b);
+    auto polynomial = solve(A, b);
 
     real result = 0;
     foreach(i; 0 .. n)

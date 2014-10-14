@@ -169,7 +169,7 @@ unittest
                                  1, 1, 3, 8, 2])));
 }
 
-Matrix LUPsolve(Matrix A, Matrix b)
+Matrix solve(Matrix A, Matrix b)
 {
     auto cols = A.cols;
     Matrix x = Col(cols), y = Col(cols), L, U;
