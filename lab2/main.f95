@@ -1,9 +1,9 @@
 program main
-    real, dimension(600) :: x
+    real, dimension(2000) :: x
     real, dimension(2) :: start
     real, dimension(size(x), size(start)) :: y1, y2, y3
     start = (/ 1.0, 0.0 /)
-    x = (/ (0.05 * (I-1), I = 1, 600) /)
+    x = (/ (0.05 * (I-1), I = 1, size(x)) /)
     y1 = euler(f, x, start)
     y2 = pceuler(f, x, start)
     y3 = rk4(f, x, start)
@@ -92,8 +92,9 @@ contains
         real, intent(in) :: x
         real, dimension(:), intent(in) :: y
         real, dimension(size(y)) :: f
+        real, parameter :: a = -0.1, q = 0.5
         f(1) = y(2)
-        f(2) = -y(1)
+        f(2) = -(a - 2 * q * cos(2 * x)) * y(1)
     end function f
 
 end program main
