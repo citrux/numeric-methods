@@ -1,51 +1,51 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-void parabolic();
-
-int main(int argc, const char *argv[])
-{
-    parabolic();
-    return 0;
-}
+#include <math.h>
 
 double source(double x, double t)
 {
+    if (fabs(x - 0.5) < 0.01)
+        return 0.1;
     return 0;
 }
 
 double initial_condition(double x)
 {
-    return 10 * (x - x * x + 1);
+    return 10 * (x - x*x);
 }
 
 double lbc_a(double t)
 {
     return 0;
 }
+
 double lbc_b(double t)
 {
     return 1;
 }
+
 double lbc_c(double t)
 {
-    return 0;
+    return 1;
 }
 
 double rbc_a(double t)
 {
     return 0;
 }
+
 double rbc_b(double t)
 {
     return 1;
 }
+
 double rbc_c(double t)
 {
-    return 10;
+    return 0;
 }
 
-void parabolic()
+
+int main(int argc, const char *argv[])
 {
     double l = 1,
            tmax = 0.3;
@@ -86,6 +86,10 @@ void parabolic()
 
         // формирование правой части
         state[0] = lbc_c(j * tau);
+
+        for (i = 1; i < n; i++)
+            state[i] += source(i*h, j*tau);
+
         state[n] = rbc_c(j * tau);
 
         // прогонка:
@@ -122,4 +126,6 @@ void parabolic()
     free(U);
     free(D);
     free(state);
+    return 0;
 }
+
