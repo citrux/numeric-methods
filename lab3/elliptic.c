@@ -79,7 +79,7 @@ int main(int argc, const char *argv[])
     double hx = l / n,
            hy = l / m;
 
-    double *u, eps = 1e-4, delta = 1;
+    double *u;
 
     double p = 1.0 / hx / hx,
            q = 1.0 / hy / hy,
@@ -87,8 +87,8 @@ int main(int argc, const char *argv[])
 
     u = (double*) calloc(sizeof(double), (n + 1) * (m + 1));
 
-    int c = 100000;
-    while (--c)
+    double delta, delta_max = 0, eps = 1e-7;
+    while (delta_max > eps || delta_max == 0)
     {
         for (j = 0; j <= n; j++)
             u[j] = (bbc_c(0) - bbc_a(0) / hx * u[m+1+j]) / (bbc_b(0) - bbc_a(0) / hx);
@@ -96,15 +96,23 @@ int main(int argc, const char *argv[])
             u[n * (m+1) + j] = (tbc_c(0) + tbc_a(0) / hx * u[(n-1)*(m+1)+j]) /
                                (tbc_b(0) + tbc_a(0) / hx);
         // серединка
+        delta_max = 0;
         for (i = 1; i < n; i++)
         {
             // серединка
             for (j = 1; j < m; j++)
-                u[i * (m+1) + j] = (
+            {
+                delta = (
                     p * (u[(i - 1) * (m+1) + j] + u[(i + 1) * (m+1) + j]) +
                     q * (u[i * (m+1) + j-1] + u[i * (m+1) + j+1])
-                    - source(i * hx, j * hy)) * r / 2.0 /(p + q) +
-                    (1 - r) * u[i * (m + 1) + j];
+                    - source(i * hx, j * hy)) * r / 2.0 /(p + q)
+                    - r * u[i * (m + 1) + j];
+
+                u[i * (m + 1) + j] += delta;
+                delta_max = fmax(fmin(fabs(delta),
+                                fabs(delta / u[i * (m + 1) + j])),
+                                delta_max);
+            }
             // края
             u[i * (m+1)] = (lbc_c(0) - lbc_a(0) / hy * u[i*(m+1)+1]) /
                            (lbc_b(0) - lbc_a(0) / hy);
@@ -125,13 +133,14 @@ int main(int argc, const char *argv[])
 
     FILE* gnuplot = popen("gnuplot -persistent", "w");
     fprintf(gnuplot, "set term pngcairo\n");
-    fprintf(gnuplot, "set dgrid3d\n");
+    fprintf(gnuplot, "set pm3d at s\n");
+    fprintf(gnuplot, "set palette rgbformulae 33, 13, 10\n");
     fprintf(gnuplot, "set contour\n");
-    fprintf(gnuplot, "set view map\n");
-    fprintf(gnuplot, "set samples 10\n");
-    fprintf(gnuplot, "unset surface\n");
+    fprintf(gnuplot, "unset key\n");
+    fprintf(gnuplot, "unset clabel\n");
+    fprintf(gnuplot, "set cntrparam levels incremental -1,0.1,1\n");
     fprintf(gnuplot, "set output \"elliptic.png\"\n");
-    fprintf(gnuplot, "splot \"data.tmp\" using 1:2:3 with lines\n");
+    fprintf(gnuplot, "sp \"data.tmp\" w l ls 7 palette notitle\n");
     fclose(gnuplot);
 
     free(u);
