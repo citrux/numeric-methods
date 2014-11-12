@@ -9,15 +9,15 @@
 
 Синтаксис вызова:
 
-  > ./parabolic implicit tmax outfile
-  > ./hyperbolic implicit tmax outfile
-  > ./elliptic precision bounds outfile
+    > ./parabolic implicit tmax prefix
+    > ./hyperbolic implicit tmax prefix
+    > ./elliptic precision bounds outfile
 
 Для параболического и гиперболического уравнений:
 
 - __implicit__ может принимать значения 0 (явная схема) и 1 (неявная)
 - __tmax__ определяет  промежуток времени, на котором моделируется поведение системы
-- __outfile__ префикс выходных данных
+- __prefix__ префикс выходных данных
 
 Для эллиптического уравнения:
 
