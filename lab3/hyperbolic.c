@@ -54,7 +54,7 @@ int main(int argc, const char *argv[])
     if (argc != 4)
     {
         puts("Неправильное число аргументов!");
-        printf("Пример использования: %s 1 5.0 wave.gif\n", argv[0]);
+        printf("Пример использования: %s 1 5.0 wave1\n", argv[0]);
         puts("Подробнее в readme.md");
         return 1;
     }
@@ -71,7 +71,7 @@ int main(int argc, const char *argv[])
 
     if (implicit)
     {
-        k = 2;
+        k = 10;
         tau = 1.0 / k / fps;
         r = tau * tau / h / h;
     }
@@ -84,10 +84,11 @@ int main(int argc, const char *argv[])
 
     m = (int)(tmax / tau);
 
-    double *state, *prev, *tmp, *L, *U, *D;
+    double *state, *prev, *next, *tmp, *L, *U, *D;
 
     state = (double*) calloc(sizeof(double), n + 1);
     prev = (double*) calloc(sizeof(double), n + 1);
+    next = (double*) calloc(sizeof(double), n + 1);
 
     if (implicit)
     {
@@ -113,9 +114,9 @@ int main(int argc, const char *argv[])
             // формирование матрицы
             for (i = 0; i <= n; i++)
             {
-                L[i] = -r;
-                U[i] = -r;
-                D[i] = 1 + 2 * r;
+                L[i] = -r / 2;
+                U[i] = -r / 2;
+                D[i] = 1 + r;
             }
             L[n-1] = -rbc_a(j * tau) / h;
             U[1] = lbc_a(j * tau) / h;
@@ -123,45 +124,48 @@ int main(int argc, const char *argv[])
             D[n] = rbc_b(j * tau) + rbc_a(j * tau) / h;
 
             // формирование правой части
-            prev[0] = lbc_c(j * tau);
+            next[0] = lbc_c(j * tau);
 
             for (i = 1; i < n; i++)
-                prev[i] = -prev[i] + 2 * state[i] + tau * tau * source(i*h, j*tau);
+                next[i] = -(1 + r) * prev[i] + 2 * state[i] +
+                    r / 2 * (prev[i - 1] + prev[i + 1]) +
+                    tau * tau * source(i*h, j*tau);
 
-            prev[n] = rbc_c(j * tau);
+            next[n] = rbc_c(j * tau);
 
             // прогонка:
             // прямая
             for (i = 0; i < n; i++)
             {
                 D[i+1] -= U[i+1] / D[i] * L[i];
-                prev[i+1] -= prev[i] / D[i] * L[i];
+                next[i+1] -= next[i] / D[i] * L[i];
             }
             // обратная
-            prev[n] /= D[n];
+            next[n] /= D[n];
             for (i = n; i > 0; i--)
             {
-                prev[i-1] -= prev[i] * U[i];
-                prev[i-1] /= D[i-1];
+                next[i-1] -= next[i] * U[i];
+                next[i-1] /= D[i-1];
             }
         }
         else
         {
             // считаем середину
             for (i = 1; i < n; i++) {
-                prev[i] = 2 * (1 - r) * state[i] + r * (state[i-1] + state[i+1])
+                next[i] = 2 * (1 - r) * state[i] + r * (state[i-1] + state[i+1])
                       - prev[i] + tau * tau * source(i * h, j * tau);
             }
             // считаем края
-            prev[0] = (lbc_c(j * tau) - state[1] * lbc_a(j * tau) / h) /
+            next[0] = (lbc_c(j * tau) - state[1] * lbc_a(j * tau) / h) /
                       (lbc_b(j * tau) - lbc_a(j * tau) / h);
-            prev[n] = (rbc_c(j * tau) + state[n-1] * rbc_a(j * tau) / h) /
+            next[n] = (rbc_c(j * tau) + state[n-1] * rbc_a(j * tau) / h) /
                       (rbc_b(j * tau) + rbc_a(j * tau) / h);
         }
 
         tmp = prev;
         prev = state;
-        state = tmp;
+        state = next;
+        next = tmp;
 
         // нужно вывести, отдать gnuplot и построить графики
         if (j % k == 0)
