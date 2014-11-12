@@ -5,21 +5,21 @@
 
 double source(double x, double y)
 {
-    if (fabs(x - 0.01) < 0.05 && fabs(y - 0.01) < 0.05)
-        return -100;
-    if (fabs(x - 0.99) < 0.05 && fabs(y - 0.99) < 0.05)
-        return 100;
+    if (fabs(x - 0.5) < 0.05 && fabs(y - 0.5) < 0.05)
+        return -1000;
+    /*if (fabs(x - 0.99) < 0.05 && fabs(y - 0.99) < 0.05)*/
+        /*return 1000;*/
     return 0;
 }
 
 double lbc_a(double t)
 {
-    return 1;
+    return 0;
 }
 
 double lbc_b(double t)
 {
-    return 0;
+    return 1;
 }
 
 double lbc_c(double t)
@@ -29,11 +29,11 @@ double lbc_c(double t)
 
 double rbc_a(double t)
 {
-    return 1;
+    return 0;
 }
 double rbc_b(double t)
 {
-    return 0;
+    return 1;
 }
 double rbc_c(double t)
 {
@@ -41,12 +41,12 @@ double rbc_c(double t)
 }
 double bbc_a(double t)
 {
-    return 1;
+    return 0;
 }
 
 double bbc_b(double t)
 {
-    return 0;
+    return 1;
 }
 
 double bbc_c(double t)
@@ -56,11 +56,11 @@ double bbc_c(double t)
 
 double tbc_a(double t)
 {
-    return 1;
+    return 0;
 }
 double tbc_b(double t)
 {
-    return 0;
+    return 1;
 }
 double tbc_c(double t)
 {
@@ -121,6 +121,15 @@ int main(int argc, const char *argv[])
         }
     }
 
+    double umin = 1e100, umax = -1e100;
+    for (i = 0; i < (m + 1) * (n + 1); i++)
+    {
+        if (u[i] > umax)
+            umax = u[i];
+        else if (u[i] < umin)
+            umin = u[i];
+    }
+
     FILE* tmp = fopen("data.tmp", "w");
     for (i = 0; i<=n; i++)
     {
@@ -131,16 +140,19 @@ int main(int argc, const char *argv[])
     fclose(tmp);
 
 
-    FILE* gnuplot = popen("gnuplot -persistent", "w");
-    fprintf(gnuplot, "set term pngcairo\n");
+    FILE* gnuplot = popen("gnuplot -p", "w");
+    /*fprintf(gnuplot, "set term pngcairo\n");*/
     fprintf(gnuplot, "set pm3d at s\n");
     fprintf(gnuplot, "set palette rgbformulae 33, 13, 10\n");
     fprintf(gnuplot, "set contour\n");
+    fprintf(gnuplot, "set hidden3d\n");
     fprintf(gnuplot, "unset key\n");
     fprintf(gnuplot, "unset clabel\n");
-    fprintf(gnuplot, "set cntrparam levels incremental -1,0.1,1\n");
-    fprintf(gnuplot, "set output \"elliptic.png\"\n");
+    fprintf(gnuplot, "set cntrparam levels incremental %lf,%lf,%lf\n",
+            umin, (umax - umin) / 20, umax);
+    /*fprintf(gnuplot, "set output \"elliptic.png\"\n");*/
     fprintf(gnuplot, "sp \"data.tmp\" w l ls 7 palette notitle\n");
+    fprintf(gnuplot, "pause mouse close\n");
     fclose(gnuplot);
 
     free(u);

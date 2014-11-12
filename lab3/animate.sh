@@ -1,2 +1,2 @@
 #!/bin/bash
-convert -delay 10 PAR_*.png -loop 100 parabolic.gif
+convert -delay 10 ${@:2} -loop 1 $1
