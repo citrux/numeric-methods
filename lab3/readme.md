@@ -11,7 +11,7 @@
 
     > ./parabolic implicit tmax prefix
     > ./hyperbolic implicit tmax prefix
-    > ./elliptic precision bounds outfile
+    > ./elliptic bounds precision outfile
 
 Для параболического и гиперболического уравнений:
 
@@ -21,6 +21,6 @@
 
 Для эллиптического уравнения:
 
+- __bounds__ может принимать значения 1 (заданные ГУ) и 0 (периодические ГУ)
 - __precision__ определяет точность, при достижении которой счёт прекращается
-- __bounds__ может принимать значения 0 (заданные ГУ) и 1 (периодические ГУ)
 - __outfile__ файл для вывода
