@@ -11,7 +11,7 @@ double source(double x, double t)
 
 double initial_condition(double x)
 {
-    return 4*2*(0.5-fabs(x - 0.5));
+    return (x > 0.333 && x < 0.667) ? 12 * (0.166-fabs(x - 0.5)) : 0;
 }
 
 double initial_condition2(double x)
@@ -71,7 +71,7 @@ int main(int argc, const char *argv[])
 
     if (implicit)
     {
-        k = 10;
+        k = 2;
         tau = 1.0 / k / fps;
         r = tau * tau / h / h;
     }
@@ -171,7 +171,7 @@ int main(int argc, const char *argv[])
         if (j % k == 0)
         {
             char fname[20];
-            sprintf(fname, "temp/%s_%d.tmp", outfile, j / k);
+            sprintf(fname, "temp/%s_%04d.tmp", outfile, j / k);
             FILE* tmp = fopen(fname, "w");
             for (i = 0; i<=n; i++)
                 fprintf(tmp, "%lf %lf\n", i * h, state[i]);
