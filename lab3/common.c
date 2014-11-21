@@ -33,6 +33,14 @@ void swap3(double **a, double **b, double **c)
     *a = tmp;
 }
 
+void swap(double **a, double **b)
+{
+    double *tmp;
+    tmp = *b;
+    *b = *a;
+    *a = tmp;
+}
+
 void initAnimation(char *name)
 {
     char fname[20];

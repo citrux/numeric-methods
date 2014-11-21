@@ -1,101 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+#include "elliptic.h"
+
 #define mod(x, y) (((x) % (y) + (y)) % (y))
 #define u(i, j) u[(mod (i, n+1)) * (m + 1) + (mod(j, m+1))]
 
-double source(double x, double y)
-{
-    if (fabs(x - 0.25) < 0.05 && fabs(y - 0.25) < 0.05)
-        return -1000;
-    if (fabs(x - 0.25) < 0.05 && fabs(y - 0.5) < 0.05)
-        return 1000;
-    if (fabs(x - 0.75) < 0.05 && fabs(y - 0.5) < 0.05)
-        return 1000;
-    if (fabs(x - 0.75) < 0.05 && fabs(y - 0.75) < 0.05)
-        return -1000;
-    return 0;
-}
-
-double lbc_a(double t)
-{
-    return 0;
-}
-
-double lbc_b(double t)
-{
-    return 1;
-}
-
-double lbc_c(double t)
-{
-    return 0;
-}
-
-double rbc_a(double t)
-{
-    return 0;
-}
-double rbc_b(double t)
-{
-    return 1;
-}
-double rbc_c(double t)
-{
-    return 0;
-}
-double bbc_a(double t)
-{
-    return 0;
-}
-
-double bbc_b(double t)
-{
-    return 1;
-}
-
-double bbc_c(double t)
-{
-    return 0;
-}
-
-double tbc_a(double t)
-{
-    return 0;
-}
-double tbc_b(double t)
-{
-    return 1;
-}
-double tbc_c(double t)
-{
-    return 0;
-}
-
-
 int main(int argc, const char *argv[])
 {
-    if (argc != 4)
-    {
-        puts("Неправильное число аргументов!");
-        printf("Пример использования: %s 1 1e-5 field.png\n", argv[0]);
-        puts("Подробнее в readme.md");
-        return 1;
-    }
-
-    int bounds = atoi(argv[1]);
-    double eps = atof(argv[2]);
-    const char* outfile = argv[3];
-
-
-    double l = 1;
-
-    int n = 50,
-        m = 50,
-        i, j;
-
-    double hx = l / n,
-           hy = l / m;
+    int i, j;
+    double hx = lx / n,
+           hy = ly / m;
 
     double *u;
 
@@ -160,7 +72,7 @@ int main(int argc, const char *argv[])
                 }
             }
         }
-        printf("\b%f\n", delta_max);
+        printf("\b\b\b\b\b\b\b\b%f", delta_max);
     }
     double umin = 1e100, umax = -1e100;
     for (i = 0; i < (m + 1) * (n + 1); i++)
@@ -171,30 +83,26 @@ int main(int argc, const char *argv[])
             umin = u[i];
     }
 
-    FILE* tmp = fopen("data.tmp", "w");
+    FILE* gp = popen("gnuplot -p", "w");
+    fprintf(gp, "set pm3d at s\n");
+    fprintf(gp, "set palette rgbformulae 33, 13, 10\n");
+    fprintf(gp, "set contour\n");
+    fprintf(gp, "set hidden3d\n");
+    fprintf(gp, "unset key\n");
+    fprintf(gp, "unset clabel\n");
+    fprintf(gp, "set cntrparam levels incremental %lf,%lf,%lf\n",
+            umin, (umax - umin) / 20, umax);
+    fprintf(gp, "sp \"-\" w l ls 7 palette notitle\n");
     for (i = 0; i<=n; i++)
     {
         for (j = 0; j <= m; j++)
-            fprintf(tmp, "%lf %lf %lf\n", i * hx, j * hy, u(i,j));
-        fprintf(tmp, "\n");
+            fprintf(gp, "%lf %lf %lf\n", i * hx, j * hy, u(i,j));
+        fprintf(gp, "\n");
     }
-    fclose(tmp);
 
-
-    FILE* gnuplot = popen("gnuplot -p", "w");
-    /*fprintf(gnuplot, "set term pngcairo\n");*/
-    fprintf(gnuplot, "set pm3d at s\n");
-    fprintf(gnuplot, "set palette rgbformulae 33, 13, 10\n");
-    fprintf(gnuplot, "set contour\n");
-    fprintf(gnuplot, "set hidden3d\n");
-    fprintf(gnuplot, "unset key\n");
-    fprintf(gnuplot, "unset clabel\n");
-    fprintf(gnuplot, "set cntrparam levels incremental %lf,%lf,%lf\n",
-            umin, (umax - umin) / 20, umax);
-    /*fprintf(gnuplot, "set output \"elliptic.png\"\n");*/
-    fprintf(gnuplot, "sp \"data.tmp\" w l ls 7 palette notitle\n");
-    fprintf(gnuplot, "pause mouse close\n");
-    fclose(gnuplot);
+    fprintf(gp, "end\n");
+    fprintf(gp, "pause mouse close\n");
+    fclose(gp);
 
     free(u);
     return 0;

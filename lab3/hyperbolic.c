@@ -34,7 +34,7 @@ void solveImplicit()
 
             un[i] = 2 * u[i] - up[i] +
                     r/4 * (up[i-1] - 2 * up[i] + up[i+1]) +
-                    r/2 * (u[i-1]  - 2 * u[i]  + u[i+1]);
+                    r/2 * (u[i-1]  - 2 * u[i]  + u[i+1]) + dt * dt * f(x[i], t);
         }
         md[0] = b0(t) - a0(t) / dx;
         mu[1] = a0(t) / dx;
@@ -48,7 +48,8 @@ void solveImplicit()
 
         swap3(&un, &u, &up);
 
-        addToAnimation(fname, x, u, n + 1);
+        if (j % k == 0)
+            addToAnimation(fname, x, u, n + 1);
 
         t += dt;
     }
@@ -79,14 +80,15 @@ void solveExplicit()
     {
         for (i = 1; i < n; i++)
             un[i] = 2 * (1 - r) * u[i] - up[i] +
-                    r * (u[i-1] + u[i+1]);
+                    r * (u[i-1] + u[i+1]) + dt * dt * f(x[i], t);
 
         un[0] = (c0(t) - a0(t) * un[1] / dx) / (b0(t) - a0(t) / dx);
         un[n] = (c1(t) + a1(t) * un[n-1] / dx) / (b1(t) + a1(t) / dx);
 
         swap3(&un, &u, &up);
 
-        addToAnimation(fname, x, u, n + 1);
+        if (j % k == 0)
+            addToAnimation(fname, x, u, n + 1);
 
         t += dt;
     }

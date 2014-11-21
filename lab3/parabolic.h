@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <math.h>
 
-char* fname = "iangle";
+char* fname = "epangle";
 
-int implicit = 1;
+int implicit = 0;
 
 double l = 1, tmax = 2;
 
@@ -44,11 +44,6 @@ double c1(double t)
 double u0(double x)
 {
     return 2 * (l / 2 - fabs(x - l / 2));
-}
-
-double du0(double x)
-{
-    return 0;
 }
 
 // источник

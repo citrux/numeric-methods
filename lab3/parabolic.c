@@ -1,131 +1,98 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+#include "common.h"
+#include "parabolic.h"
 
-double source(double x, double t)
+void solveImplicit()
 {
-    if (fabs(x - 0.5) < 0.01)
-        return 0.1;
-    return 0;
+    int i, j, t;
+    double dx = l / n, dt = tmax / m, r = dt / dx / dx;
+    double *x, *u, *un, *ml, *md, *mu;
+
+    x = calloc(sizeof(double), n + 1);
+    u = calloc(sizeof(double), n + 1);
+    un = calloc(sizeof(double), n + 1);
+    ml = calloc(sizeof(double), n + 1);
+    md = calloc(sizeof(double), n + 1);
+    mu = calloc(sizeof(double), n + 1);
+
+    t = 0;
+    initAnimation(fname);
+
+    for (i = 0; i <= n; i++)
+    {
+        x[i] = i * dx;
+        u[i] = u0(i * dx);
+    }
+
+    for (j = 0; j < m; j++)
+    {
+        for (i = 0; i <= n; i++)
+        {
+            md[i] = 1 + 2 * r;
+            mu[i] = ml[i] = -r;
+
+            un[i] = u[i] + dt * f(x[i], t);
+        }
+        md[0] = b0(t) - a0(t) / dx;
+        mu[1] = a0(t) / dx;
+        un[0] = c0(t);
+
+        md[n] = b1(t) + a1(t) / dx;
+        ml[n-1] = -a1(t) / dx;
+        un[n] = c1(t);
+
+        solveThomas(n + 1, ml, md, mu, un);
+
+        swap(&un, &u);
+
+        if (j % k == 0)
+            addToAnimation(fname, x, u, n + 1);
+
+        t += dt;
+    }
 }
 
-double initial_condition(double x)
+void solveExplicit()
 {
-    return 10 * (x - x*x);
-}
+    int i, j, t;
+    double dx = l / n, dt = tmax / m, r = dt * dt / dx / dx;
+    double *x, *u, *un, *ml, *md, *mu;
 
-double lbc_a(double t)
-{
-    return 0;
-}
+    x = calloc(sizeof(double), n + 1);
+    u = calloc(sizeof(double), n + 1);
+    un = calloc(sizeof(double), n + 1);
 
-double lbc_b(double t)
-{
-    return 1;
-}
+    t = 0;
+    initAnimation(fname);
 
-double lbc_c(double t)
-{
-    return 1;
-}
+    for (i = 0; i <= n; i++)
+    {
+        x[i] = i * dx;
+        u[i] = u0(i * dx);
+    }
 
-double rbc_a(double t)
-{
-    return 0;
-}
+    for (j = 0; j < m; j++)
+    {
+        for (i = 1; i < n; i++)
+            un[i] = (1 - 2 * r) * u[i] +
+                r * (u[i-1] + u[i+1]) + dt * f(x[i], t);
 
-double rbc_b(double t)
-{
-    return 1;
-}
+        un[0] = (c0(t) - a0(t) * un[1] / dx) / (b0(t) - a0(t) / dx);
+        un[n] = (c1(t) + a1(t) * un[n-1] / dx) / (b1(t) + a1(t) / dx);
 
-double rbc_c(double t)
-{
-    return 0;
-}
+        swap(&un, &u);
 
+        if (j % k == 0)
+            addToAnimation(fname, x, u, n + 1);
+
+        t += dt;
+    }
+}
 
 int main(int argc, const char *argv[])
 {
-    double l = 1,
-           tmax = 0.3;
-
-    unsigned int n = 1000,
-                 m = 1000,
-                 k = m / 20,
-                 i, j;
-
-    double h = l / n,
-           tau = tmax / m,
-           r = tau / h / h;
-
-    double *state, *L, *U, *D;
-
-    state = (double*) calloc(sizeof(double), n + 1);
-
-    L = (double*) calloc(sizeof(double), n + 1);
-    U = (double*) calloc(sizeof(double), n + 1);
-    D = (double*) calloc(sizeof(double), n + 1);
-
-    for (i = 0; i <= n; i++)
-        state[i] = initial_condition(i * h);
-
-    for (j = 0; j <= m; j++)
-    {
-        // формирование матрицы
-        for (i = 0; i <= n; i++)
-        {
-            L[i] = -r;
-            U[i] = -r;
-            D[i] = 1 + 2 * r;
-        }
-        L[n-1] = -rbc_a(j * tau) / h;
-        U[1] = lbc_a(j * tau) / h;
-        D[0] = lbc_b(j * tau) - lbc_a(j * tau) / h;
-        D[n] = rbc_b(j * tau) + rbc_a(j * tau) / h;
-
-        // формирование правой части
-        state[0] = lbc_c(j * tau);
-
-        for (i = 1; i < n; i++)
-            state[i] += source(i*h, j*tau);
-
-        state[n] = rbc_c(j * tau);
-
-        // прогонка:
-        // прямая
-        for (i = 0; i < n; i++)
-        {
-            D[i+1] -= U[i+1] / D[i] * L[i];
-            state[i+1] -= state[i] / D[i] * L[i];
-        }
-        // обратная
-        state[n] /= D[n];
-        for (i = n; i > 0; i--)
-        {
-            state[i-1] -= state[i] * U[i];
-            state[i-1] /= D[i-1];
-        }
-
-        // нужно вывести, отдать gnuplot и построить графики
-        if (j % k == 0)
-        {
-            FILE* tmp = fopen("data.tmp", "w");
-            for (i = 0; i<=n; i++)
-                fprintf(tmp, "%lf %lf\n", i * h, state[i]);
-            fclose(tmp);
-            FILE* gnuplot = popen("gnuplot", "w");
-            fprintf(gnuplot, "set term pngcairo\n");
-            fprintf(gnuplot, "set yrange [0:12]\n");
-            fprintf(gnuplot, "set output \"PAR_%04d.png\"\n", j / k);
-            fprintf(gnuplot, "plot \"data.tmp\" using 1:2 with lines\n");
-            fclose(gnuplot);
-        }
-    }
-    free(L);
-    free(U);
-    free(D);
-    free(state);
+    if (implicit)
+        solveImplicit();
+    else
+        solveExplicit();
     return 0;
 }
-
