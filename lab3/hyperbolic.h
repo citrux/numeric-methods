@@ -1,13 +1,13 @@
 #include <stdlib.h>
 #include <math.h>
 
-char* fname = "iangle";
+char* fname = "test1";
 
 int implicit = 1;
 
-double l = 1, tmax = 2;
+double l = 1, tmax = 6;
 
-int n = 100, m = 210, k = 10;
+int n = 100, m = 1200, k = 5;
 
 // Граничные условия
 double a0(double t)
@@ -43,7 +43,8 @@ double c1(double t)
 // Начальные условия
 double u0(double x)
 {
-    return 2 * (l / 2 - fabs(x - l / 2));
+    double y = 8 * M_PI * (x - l / 2);
+    return (y != 0) ? sin(y) / y : 1;
 }
 
 double du0(double x)

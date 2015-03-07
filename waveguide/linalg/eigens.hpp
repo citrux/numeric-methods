@@ -10,9 +10,9 @@ void orthogonalize(vec & a, const mat & vs)
 }
 
 template <typename T>
-eigen maxEigenValue(const T & A, const mat & O)
+eigen maxEigenValue(const T & A, const mat & O = {})
 {
-    double l = 0, l1 = 1, eps = 1e-6;
+    double l = 0, l1 = 1, eps = 1e-10;
     vec x(A.size());
     // перебираем базисные вектора в поисках некомпланарного
     for (int i = 0; norm(x) < 10 * eps; ++i)
@@ -42,11 +42,14 @@ eigen maxEigenValue(const T & A, const mat & O)
 }
 
 template <typename T>
-vector<eigen> getEigens(const T & A)
+vector<eigen> getEigens(const T & A, size_t count = 0)
 {
+    if (!count)
+        count  = A.size();
+
     mat ev;
     vector<eigen> res;
-    for (size_t i = 0; i < A.size(); ++i)
+    for (size_t i = 0; i < count; ++i)
     {
         auto e = maxEigenValue(A, ev);
         ev.push_back(e.v);

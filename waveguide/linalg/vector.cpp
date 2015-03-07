@@ -8,10 +8,8 @@ typedef vector<double> vec;
 double operator * (const vec & a, const vec & b)
 {
     double res = 0;
-    double eps = 1e-4;
     for (size_t i = 0; i < a.size(); ++i)
-        if (abs(a[i]) > eps && abs(b[i]) > eps)
-            res += a[i] * b[i];
+        res += a[i] * b[i];
     return res;
 }
 

@@ -98,4 +98,3 @@ mat operator * (mat a, const double b)
     return a;
 }
 
-
