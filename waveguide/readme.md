@@ -1,11 +1,16 @@
-structure:
+### structure
 
-→ waveguide
--→ linalg
--→ eigens.hpp
+````
+- linalg
+  | - eigens.hpp
        ^
--→ calc_modes.cpp
+- calc_modes.cpp
        v
-   e1, e2 , …
+   ew.py hw.py
        v
--→ draw_fields.py
+- draw_fields.py
+````
+
+### todo
+
+* write `draw_fields.py` (separate data and logics in python script)

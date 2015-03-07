@@ -11,8 +11,8 @@ calc_modes: $(OBJS)
 depend: .depend
 
 .depend: $(SRCS)
-	rm -f ./.depend
-	$(CXX) $(CXXFLAGS) -MM $^>>./.depend;
+	rm -f .depend
+	$(CXX) $(CXXFLAGS) -MM $^ >> .depend;
 
 clean:
 	$(RM) $(OBJS)
