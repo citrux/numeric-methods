@@ -214,6 +214,9 @@ string vec2npmatrix(const vec & v, size_t m, size_t n)
 string grid2npmatrices(const grid & g)
 {
     string res = "{\n"
+    "'a' : " + to_string(g.a) + ",\n"
+    "'b' : " + to_string(g.b) + ",\n"
+    "'g2' : " + to_string(g.g2) + ",\n"
     "'x' : np.mgrid[0:" + to_string(g.b) + ":" + to_string(g.n) + "j," +
           "0:" + to_string(g.a) + ":" + to_string(g.m) + "j][1],\n"
     "'y' : np.mgrid[0:" + to_string(g.b) + ":" + to_string(g.n) + "j," +
@@ -231,22 +234,12 @@ void write2py(const string fname, const vector<grid> & grids)
     ofstream py;
     py.open(fname);
     py << "import numpy as np\n";
-    py << "import matplotlib.pyplot as plt\n";
-    py << "from mpl_toolkits.mplot3d import Axes3D\n";
+    py << "modes = [";
     for (size_t i = 0; i < grids.size(); ++i)
     {
-        auto var = "f" + to_string(i+1);
-        py << var << " = " << grid2npmatrices(grids[i]) << "\n";
-        py << "plt.axes(projection='3d').plot_surface(" <<
-            var << "['x'], " << var << "['y'], " << var <<
-            "['Z'],cmap=plt.cm.jet, rstride=1, cstride=1, linewidth=0)\n";
-        py << "plt.show()\n";
-        py << "plt.streamplot(" << var << "['x'], " << var << "['y'], " <<
-               var << "['Ex'], " << var << "['Ey']" << ", color='k')\n";
-        py << "plt.streamplot(" << var << "['x'], " << var << "['y'], " <<
-               var << "['Hx'], " << var << "['Hy']" << ", color='b')\n";
-        py << "plt.show()\n";
+        py << grid2npmatrices(grids[i]) << ",\n";
     }
+    py << "]\n";
     py.close();
 }
 
