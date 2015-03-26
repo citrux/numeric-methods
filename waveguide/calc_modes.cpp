@@ -4,9 +4,9 @@
 
 using namespace std;
 
-struct grid {double a, b; size_t m, n; vec Z, Ex, Hx, Ey, Hy; double g2;};
+struct mode {double a, b; size_t m, n; vec Z, Ex, Hx, Ey, Hy; double g2;};
 
-vector<grid> getEwaves(double a, double b, size_t m, size_t n, size_t count)
+vector<mode> getEwaves(double a, double b, size_t m, size_t n, size_t count)
 {
     smat D2((m-2) * (n-2));
 
@@ -32,7 +32,7 @@ vector<grid> getEwaves(double a, double b, size_t m, size_t n, size_t count)
     // будут низшими собственными значениями оператора D2
     auto op = -D2 + I(D2.size()) * lmax.l;
     auto modes = getEigens(op, count);
-    vector<grid> result(count);
+    vector<mode> result(count);
 
     // определим парочку нужных операторов:
     smat Dy(m * n);
@@ -84,8 +84,8 @@ vector<grid> getEwaves(double a, double b, size_t m, size_t n, size_t count)
                     Z[i * m + j] = modes[k].v[(i-1) * (m-2) + (j-1)];
         auto g2 = modes[k].l - lmax.l;
         auto h = sqrt(g2);
-        auto omega = h * 1.4142;
-        double eps = 1;
+        auto omega = h * 1.4142 * 3e8;
+        double eps = 8.85e-12;
         auto Ex = Dx * Z * (-h / g2);
         auto Ey = Dy * Z * (-h / g2);
         auto Hx = Ey * (-omega * eps / h);
@@ -95,7 +95,7 @@ vector<grid> getEwaves(double a, double b, size_t m, size_t n, size_t count)
     return result;
 }
 
-vector<grid> getHwaves(double a, double b, size_t m, size_t n, size_t count)
+vector<mode> getHwaves(double a, double b, size_t m, size_t n, size_t count)
 {
     smat D2(m * n);
 
@@ -132,7 +132,7 @@ vector<grid> getHwaves(double a, double b, size_t m, size_t n, size_t count)
     // будут низшими собственными значениями оператора D2
     auto op = -D2 + I(D2.size()) * xmax.l;
     auto modes = getEigens(op, count+1);
-    vector<grid> result(count);
+    vector<mode> result(count);
 
     // определим парочку нужных операторов:
     smat Dy(m * n);
@@ -180,8 +180,8 @@ vector<grid> getHwaves(double a, double b, size_t m, size_t n, size_t count)
         auto Z = modes[k+1].v;
         auto g2 = modes[k+1].l - xmax.l;
         auto h = sqrt(g2);
-        auto omega = h * 1.4142;
-        double mu = 1;
+        auto omega = h * 1.4142 * 3e8;
+        double mu = 1.257e-6;
         auto Ex = Dy * Z * (-omega * mu / g2);
         auto Ey = Dx * Z * (omega * mu / g2);
         auto Hx = Ey * (-h / omega / mu);
@@ -211,7 +211,7 @@ string vec2npmatrix(const vec & v, size_t m, size_t n)
     return res;
 }
 
-string grid2npmatrices(const grid & g)
+string mode2npmatrices(const mode & g)
 {
     string res = "{\n"
     "'a' : " + to_string(g.a) + ",\n"
@@ -219,9 +219,9 @@ string grid2npmatrices(const grid & g)
     "'m' : " + to_string(g.m) + ",\n"
     "'n' : " + to_string(g.n) + ",\n"
     "'g2' : " + to_string(g.g2) + ",\n"
-    "'x' : np.mgrid[0:" + to_string(g.b) + ":" + to_string(g.n) + "j," +
+    "'x' : np.mmode[0:" + to_string(g.b) + ":" + to_string(g.n) + "j," +
           "0:" + to_string(g.a) + ":" + to_string(g.m) + "j][1],\n"
-    "'y' : np.mgrid[0:" + to_string(g.b) + ":" + to_string(g.n) + "j," +
+    "'y' : np.mmode[0:" + to_string(g.b) + ":" + to_string(g.n) + "j," +
           "0:" + to_string(g.a) + ":" + to_string(g.m) + "j][0],\n"
     "'Z' :" + vec2npmatrix(g.Z, g.m, g.n) + ",\n"
     "'Ex' :" + vec2npmatrix(g.Ex, g.m, g.n) + ",\n"
@@ -231,15 +231,15 @@ string grid2npmatrices(const grid & g)
     return res;
 }
 
-void write2py(const string fname, const vector<grid> & grids)
+void write2py(const string fname, const vector<mode> & modes)
 {
     ofstream py;
     py.open(fname);
     py << "import numpy as np\n";
     py << "modes = [";
-    for (size_t i = 0; i < grids.size(); ++i)
+    for (size_t i = 0; i < modes.size(); ++i)
     {
-        py << grid2npmatrices(grids[i]) << ",\n";
+        py << mode2npmatrices(modes[i]) << ",\n";
     }
     py << "]\n";
     py.close();
