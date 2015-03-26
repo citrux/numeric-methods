@@ -14,4 +14,4 @@
 ### todo
 
 * [x] write `draw_fields.py` (separate data and logics in python script)
-* [ ] draw longitudinal field
+* [x] draw longitudinal field

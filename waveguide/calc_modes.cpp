@@ -216,6 +216,8 @@ string grid2npmatrices(const grid & g)
     string res = "{\n"
     "'a' : " + to_string(g.a) + ",\n"
     "'b' : " + to_string(g.b) + ",\n"
+    "'m' : " + to_string(g.m) + ",\n"
+    "'n' : " + to_string(g.n) + ",\n"
     "'g2' : " + to_string(g.g2) + ",\n"
     "'x' : np.mgrid[0:" + to_string(g.b) + ":" + to_string(g.n) + "j," +
           "0:" + to_string(g.a) + ":" + to_string(g.m) + "j][1],\n"
