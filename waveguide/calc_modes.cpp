@@ -219,9 +219,9 @@ string mode2npmatrices(const mode & g)
     "'m' : " + to_string(g.m) + ",\n"
     "'n' : " + to_string(g.n) + ",\n"
     "'g2' : " + to_string(g.g2) + ",\n"
-    "'x' : np.mmode[0:" + to_string(g.b) + ":" + to_string(g.n) + "j," +
+    "'x' : np.mgrid[0:" + to_string(g.b) + ":" + to_string(g.n) + "j," +
           "0:" + to_string(g.a) + ":" + to_string(g.m) + "j][1],\n"
-    "'y' : np.mmode[0:" + to_string(g.b) + ":" + to_string(g.n) + "j," +
+    "'y' : np.mgrid[0:" + to_string(g.b) + ":" + to_string(g.n) + "j," +
           "0:" + to_string(g.a) + ":" + to_string(g.m) + "j][0],\n"
     "'Z' :" + vec2npmatrix(g.Z, g.m, g.n) + ",\n"
     "'Ex' :" + vec2npmatrix(g.Ex, g.m, g.n) + ",\n"
@@ -247,8 +247,8 @@ void write2py(const string fname, const vector<mode> & modes)
 
 int main()
 {
-    auto hw = getHwaves(5, 4, 50, 40, 3);
-    auto ew = getEwaves(5, 4, 50, 40, 3);
+    auto hw = getHwaves(0.023, 0.010, 50, 20, 3);
+    auto ew = getEwaves(0.023, 0.010, 50, 20, 3);
     write2py("hw.py", hw);
     write2py("ew.py", ew);
 }

@@ -40,7 +40,7 @@ def plot_fields(t, i, f):
         labeltop='off',
         labelleft='off',
         labelright='off')
-    plt.title("$a = %.2f,\ b = %.2f,\ g^2 = %4f$" % (f['a'], f['b'], f['g2']))
+    plt.title("$a = %.2e,\ b = %.2e,\ g^2 = %4e$" % (f['a'], f['b'], f['g2']))
     plt.savefig(t + "%d_xy.png" % (i + 1))
 
     h = f['g2'] ** .5
@@ -68,7 +68,7 @@ def plot_fields(t, i, f):
             labeltop='off',
             labelleft='off',
             labelright='off')
-        plt.title("$E_{zx},\ a = %.2f,\ b = %.2f,\ g^2 = %4f$" % (f['a'], f['b'], f['g2']))
+        plt.title("$E_{zx},\ a = %.2e,\ b = %.2e,\ g^2 = %4e$" % (f['a'], f['b'], f['g2']))
         print(">  save")
         plt.savefig(t + "%d_zx.png" % (i + 1))
 
@@ -92,7 +92,7 @@ def plot_fields(t, i, f):
             labeltop='off',
             labelleft='off',
             labelright='off')
-        plt.title("$E_{zy},\ a = %.2f,\ b = %.2f,\ g^2 = %4f$" % (f['a'], f['b'], f['g2']))
+        plt.title("$E_{zy},\ a = %.2e,\ b = %.2e,\ g^2 = %4e$" % (f['a'], f['b'], f['g2']))
         print(">  save")
         plt.savefig(t + "%d_zy.png" % (i + 1))
     else:
@@ -118,7 +118,7 @@ def plot_fields(t, i, f):
             labeltop='off',
             labelleft='off',
             labelright='off')
-        plt.title("$H_{zx},\ a = %.2f,\ b = %.2f,\ g^2 = %4f$" % (f['a'], f['b'], f['g2']))
+        plt.title("$H_{zx},\ a = %.2e,\ b = %.2e,\ g^2 = %4e$" % (f['a'], f['b'], f['g2']))
         print(">  save")
         plt.savefig(t + "%d_zx.png" % (i + 1))
 
@@ -142,7 +142,7 @@ def plot_fields(t, i, f):
             labeltop='off',
             labelleft='off',
             labelright='off')
-        plt.title("$H_{zy},\ a = %.2f,\ b = %.2f,\ g^2 = %4f$" % (f['a'], f['b'], f['g2']))
+        plt.title("$H_{zy},\ a = %.2e,\ b = %.2e,\ g^2 = %4e$" % (f['a'], f['b'], f['g2']))
         print(">  save")
         plt.savefig(t + "%d_zy.png" % (i + 1))
 
