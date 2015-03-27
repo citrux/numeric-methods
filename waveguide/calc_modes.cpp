@@ -6,6 +6,54 @@ using namespace std;
 
 struct mode {double a, b; size_t m, n; vec Z, Ex, Hx, Ey, Hy; double g2;};
 
+
+// d/dy
+smat ddy(size_t m, size_t n, double hy)
+{
+    smat Dy(m * n);
+    for (size_t i = 1; i < n-1; ++i)
+        for (size_t j = 0; j < m; ++j)
+        {
+            Dy[i*m+j][(i-1) * m + j] = -.5 / hy;
+            Dy[i*m+j][(i+1) * m + j] = .5 / hy;
+        }
+    for (size_t j = 0; j < m; ++j)
+    {
+        Dy[j][j] = -1.5 / hy;
+        Dy[j][m + j] = 2. / hy;
+        Dy[j][2*m + j] = -.5 / hy;
+
+        Dy[(n-1) * m + j][(n-1) * m + j] = 1.5 / hy;
+        Dy[(n-1) * m + j][(n-2) * m + j] = -2. / hy;
+        Dy[(n-1) * m + j][(n-3) * m + j] = .5 / hy;
+    }
+    return Dy;
+}
+
+// d/dx
+smat ddx(size_t m, size_t n, double hx)
+{
+    smat Dx(m * n);
+    for (size_t i = 0; i < n; ++i)
+        for (size_t j = 1; j < m-1; ++j)
+        {
+            Dx[i*m+j][i * m + j-1] = -.5 / hx;
+            Dx[i*m+j][i * m + j+1] = .5 / hx;
+        }
+    for (size_t i = 0; i < n; ++i)
+    {
+        Dx[i*m][i*m] = -1.5 / hx;
+        Dx[i*m][i*m + 1] = 2. / hx;
+        Dx[i*m][i*m + 2] = -.5 / hx;
+
+        Dx[(i+1) * m - 1][(i+1) * m - 1] = 1.5 / hx;
+        Dx[(i+1) * m - 1][(i+1) * m - 2] = -2. / hx;
+        Dx[(i+1) * m - 1][(i+1) * m - 3] = .5 / hx;
+    }
+    return Dx;
+}
+
+
 vector<mode> getEwaves(double a, double b, size_t m, size_t n, size_t count)
 {
     smat D2((m-2) * (n-2));
@@ -34,46 +82,9 @@ vector<mode> getEwaves(double a, double b, size_t m, size_t n, size_t count)
     auto modes = getEigens(op, count);
     vector<mode> result(count);
 
-    // определим парочку нужных операторов:
-    smat Dy(m * n);
-    smat Dx(m * n);
-
-    // d/dy
-    for (size_t i = 1; i < n-1; ++i)
-        for (size_t j = 0; j < m; ++j)
-        {
-            Dy[i*m+j][(i-1) * m + j] = -.5 / hy;
-            Dy[i*m+j][(i+1) * m + j] = .5 / hy;
-        }
-    for (size_t j = 0; j < m; ++j)
-    {
-        Dy[j][j] = -1.5 / hy;
-        Dy[j][m + j] = 2. / hy;
-        Dy[j][2*m + j] = -.5 / hy;
-
-        Dy[(n-1) * m + j][(n-1) * m + j] = 1.5 / hy;
-        Dy[(n-1) * m + j][(n-2) * m + j] = -2. / hy;
-        Dy[(n-1) * m + j][(n-3) * m + j] = .5 / hy;
-    }
-
-    // d/dx
-    for (size_t i = 0; i < n; ++i)
-        for (size_t j = 1; j < m-1; ++j)
-        {
-            Dx[i*m+j][i * m + j-1] = -.5 / hx;
-            Dx[i*m+j][i * m + j+1] = .5 / hx;
-        }
-    for (size_t i = 0; i < n; ++i)
-    {
-        Dx[i*m][i*m] = -1.5 / hx;
-        Dx[i*m][i*m + 1] = 2. / hx;
-        Dx[i*m][i*m + 2] = -.5 / hx;
-
-        Dx[(i+1) * m - 1][(i+1) * m - 1] = 1.5 / hx;
-        Dx[(i+1) * m - 1][(i+1) * m - 2] = -2. / hx;
-        Dx[(i+1) * m - 1][(i+1) * m - 3] = .5 / hx;
-    }
-
+    // операторы частных производных
+    smat Dy = ddy(m, n, hy);
+    smat Dx = ddx(m, n, hx);
 
     for (size_t k = 0; k < count; ++k)
     {
@@ -131,48 +142,14 @@ vector<mode> getHwaves(double a, double b, size_t m, size_t n, size_t count)
     // формируем новый оператор, высшие собственные значения которого
     // будут низшими собственными значениями оператора D2
     auto op = -D2 + I(D2.size()) * xmax.l;
+    // так как нулевая мода нас не интересует, придётся считать на одну
+    // гармонику больше
     auto modes = getEigens(op, count+1);
     vector<mode> result(count);
 
-    // определим парочку нужных операторов:
-    smat Dy(m * n);
-    smat Dx(m * n);
-
-    // d/dy
-    for (size_t i = 1; i < n-1; ++i)
-        for (size_t j = 0; j < m; ++j)
-        {
-            Dy[i*m+j][(i-1) * m + j] = -.5 / hy;
-            Dy[i*m+j][(i+1) * m + j] = .5 / hy;
-        }
-    for (size_t j = 0; j < m; ++j)
-    {
-        Dy[j][j] = -1.5 / hy;
-        Dy[j][m + j] = 2. / hy;
-        Dy[j][2*m + j] = -.5 / hy;
-
-        Dy[(n-1) * m + j][(n-1) * m + j] = 1.5 / hy;
-        Dy[(n-1) * m + j][(n-2) * m + j] = -2. / hy;
-        Dy[(n-1) * m + j][(n-3) * m + j] = .5 / hy;
-    }
-
-    // d/dx
-    for (size_t i = 0; i < n; ++i)
-        for (size_t j = 1; j < m-1; ++j)
-        {
-            Dx[i*m+j][i * m + j-1] = -.5 / hx;
-            Dx[i*m+j][i * m + j+1] = .5 / hx;
-        }
-    for (size_t i = 0; i < n; ++i)
-    {
-        Dx[i*m][i*m] = -1.5 / hx;
-        Dx[i*m][i*m + 1] = 2. / hx;
-        Dx[i*m][i*m + 2] = -.5 / hx;
-
-        Dx[(i+1) * m - 1][(i+1) * m - 1] = 1.5 / hx;
-        Dx[(i+1) * m - 1][(i+1) * m - 2] = -2. / hx;
-        Dx[(i+1) * m - 1][(i+1) * m - 3] = .5 / hx;
-    }
+    // операторы частных производных
+    smat Dy = ddy(m, n, hy);
+    smat Dx = ddx(m, n, hx);
 
 
     for (size_t k = 0; k < count; ++k)
@@ -247,8 +224,8 @@ void write2py(const string fname, const vector<mode> & modes)
 
 int main()
 {
-    auto hw = getHwaves(0.023, 0.010, 50, 20, 3);
-    auto ew = getEwaves(0.023, 0.010, 50, 20, 3);
+    auto hw = getHwaves(0.023, 0.010, 50, 20, 4);
+    auto ew = getEwaves(0.023, 0.010, 50, 20, 4);
     write2py("hw.py", hw);
     write2py("ew.py", ew);
 }
