@@ -7,6 +7,7 @@
 \usepackage[margin=1.5cm]{geometry}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{indentfirst}
 \begin{document}
 \section{Дифференциальные и матричные операторы. Собственные значения}
 \subsection{Дифференциальный оператор}
@@ -268,7 +269,7 @@
 
 	Для начала рассмотрим задачу поиска наибольшего по абсолютной величине собственного значения. Так как мы работаем с вычислительной машиной, то при хранении в памяти числа округляются. Следовательно, сделать так, чтобы \( x_1 \) было строго равно нулю в принципе невозможно и в качестве начального приближения можно брать совершенно произвольный вектор, скажем \( (1, 0, 0, \ldots, 0) \).
 
-	Алгоритм поиска может выглядеть следующим образом:
+	Алгоритм поиска может выглядеть следующим образом.
 	\begin{algorithm}[h]
 	  \begin{algorithmic}
 	  	\Function{getMaxEigen}{A}
@@ -283,6 +284,84 @@
 	      \State $x \gets x' / \| x' \|  $ \Comment{Нормировка}
 	    \EndWhile
 	    \State \textbf{return} $(\lambda, x)$\Comment{Собственное значение и нормированный собственный вектор}
+	    \EndFunction
+	  \end{algorithmic}
+	\end{algorithm}
+
+	Рассмотрим теперь вопрос о поиске нескольких собственных значений. Как говорилось выше, для этого нужно, чтобы \( x_1 = 0 \). Если у нас есть некоторый вектор \(x\), то для выполнения этого условия нужно его преобразовать к виду
+	\[
+		\vec{y} = \vec{x} - x_1\vec{v}_1 = \vec{x} - 
+		\frac{(\vec{x}, \vec{v}_2,\ldots,\vec{v}_n)}{(\vec{v}_1,\vec{v}_2,\ldots,\vec{v}_n)}\vec{v}_1.
+	\]
+	Однако, для этого требуется знать все векторы \( \{ \vec{v}_i \} \), в то время, как мы знаем только \( \vec{v}_1 \).
+
+	Если бы все собственные векторы образовывали ортонормированный базис, то ситуация бы сильно упростилась:
+	\[
+		\vec{y} = \vec{x} - x_1\vec{v}_1 = \vec{x} - (\vec{x}, \vec{v}_1)\vec{v_1}.
+	\]
+	В этом случае можно построить простой алгоритм. При этом стоит учесть, что ортогональность системы собственных векторов накладывает ограницение на матрицу:
+	\begin{align*}
+		& A\vec{v} = \lambda_v\vec{v},\\
+		& A\vec{u} = \lambda_u\vec{u},
+	\end{align*}
+	\[
+		(\lambda_v - \lambda_u)(\vec{v}, \vec{u}) = (A\vec{v}, \vec{u}) - (\vec{v}, A\vec{u})
+	\]
+	Учтём \((\vec{v}, \vec{u}) = 0 \) и распишем покоординатно правую часть:
+	\[
+		a_{ij} v_j u_i - a_{ij} u_j v_i = (a_{ij} - a_{ji}) v_j u_i = 0,
+	\]
+	следовательно
+	\[
+		a_{ij} = a_{ji},
+	\]
+	то есть матрица должна быть симметричной (в \( \mathbb{C}^n \) она должна быть эрмитовой: \( a_{ij} = a_{ji}^* \)).
+
+	Таким образом, алгоритм для ортогонализации вектора \( \vec{x} \) с уже найденными собственными векторами симметричной матрицы \( A \) можно записать в виде:
+	\begin{algorithm}[h]
+	  \begin{algorithmic}
+	  	\Procedure{orthogonalize}{x, $\{ v_i \}$}
+	  	\State $ n \gets |\{ v_i \}| $
+	    \For{j = $\overline{1, n}$}
+	      \State $x \gets x - (x \cdot v_j)v_j$
+	    \EndFor
+	    \EndProcedure
+	  \end{algorithmic}
+	\end{algorithm}
+
+	Используя эту процедуру, можно нескколько усовершенствовать алгоритм поиска максимального собственного значения, чтобы он искал заданное количество отсортированных по убыванию абсолютной величины собственных значений. Для начала, построим алгоритм, производящий поиск максимального собственного значения с собственным ветором, ортогональным заданным векторам.
+	\begin{algorithm}[h]
+	  \begin{algorithmic}
+	  	\Function{getEigen}{A, $\{ v_i \}$}
+	    \State $x \gets (1, 0, 0, \ldots, 0)$
+	    \State orthogonalize(x, $\{ v_i \}$)
+	    \State $ \lambda \gets 1 $
+	    \State $ \lambda' \gets 0 $
+	    \State $ \varepsilon \gets 10^{-6} $
+	    \While{$|\lambda - \lambda'| > \varepsilon $}
+	      \State $x' \gets Ax$
+	      \State orthogonalize($x'$, $\{ v_i \}$)
+	      \State $\lambda' \gets \lambda$
+	      \State $\lambda  \gets x' \cdot x $
+	      \State $x \gets x' / \| x' \|$
+	    \EndWhile
+	    \State \textbf{return} $(\lambda, x)$
+	    \EndFunction
+	  \end{algorithmic}
+	\end{algorithm}
+
+	Затем с его помощью можно построить нужный нам алгоритм.
+	\begin{algorithm}[h]
+	  \begin{algorithmic}
+	  	\Function{getEigens}{A, n}
+	  	\State vectors $\gets \{\}$
+	  	\State eigens $\gets \{\}$
+	    \For{j = $\overline{1, n}$}
+	      \State $(\lambda, v) \gets $ getEigen(A, vectors)
+	      \State eigens $ \gets $ eigens $ \cup  \{ (\lambda, v) \}$
+	      \State vectors $ \gets $ vectors $ \cup  \{ v \}$
+	    \EndFor
+	   	\State \textbf{return} eigens
 	    \EndFunction
 	  \end{algorithmic}
 	\end{algorithm}
