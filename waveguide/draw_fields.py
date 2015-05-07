@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-import ew
-import hw
+from waves import ew, hw
 
 def remove_ticks():
     plt.tick_params(
@@ -51,13 +50,13 @@ def plot_fields(t, i, f):
 
     plt.cla()
     plt.axes(projection='rectilinear').set_aspect("equal")
-    
+
     print(">  plot E_xy")
     create_streamplot(f['x'], f['y'], f['Ex'], f['Ey'], 'k')
-    
+
     print(">  plot H_xy")
     create_streamplot(f['x'], f['y'], f['Hx'], f['Hy'], 'b')
-    
+
     print(">  save")
     set_labels("$x$", "$y$")
     plt.title("$a = %.2e,\ b = %.2e,\ g^2 = %4e$" % (f['a'], f['b'], f['g2']))
@@ -73,7 +72,7 @@ def plot_fields(t, i, f):
         print(">  plot %s_xz" % t)
         plt.cla()
         Ez = f["Z"][f["n"] // 4,:].reshape(f["m"], 1) * np.cos(h * z_points)
-        Ex = f["Ex"][f["n"] // 4,:].reshape(f["m"], 1) * np.sin(h * z_points) 
+        Ex = f["Ex"][f["n"] // 4,:].reshape(f["m"], 1) * np.sin(h * z_points)
         create_streamplot(z_points, x_points, Ez, Ex, 'k')
         set_labels("$z$", "$x$")
         plt.title("$E_{zx},\ a = %.2e,\ b = %.2e,\ g^2 = %4e$" % (f['a'], f['b'], f['g2']))
@@ -83,7 +82,7 @@ def plot_fields(t, i, f):
         print(">  plot %s_yz" % t)
         plt.cla()
         Ez = f["Z"][:,f["m"] // 4].reshape(f["n"], 1) * np.cos(h * z_points)
-        Ey = f["Ey"][:,f["m"] // 4].reshape(f["n"], 1) * np.sin(h * z_points) 
+        Ey = f["Ey"][:,f["m"] // 4].reshape(f["n"], 1) * np.sin(h * z_points)
         create_streamplot(z_points, y_points, Ez, Ey, 'k')
         set_labels("$z$", "$y$")
 
@@ -97,7 +96,7 @@ def plot_fields(t, i, f):
         z_points = np.linspace(z_min, z_max, 21)
         Hz = f["Z"][f["n"] // 4,:].reshape(f["m"], 1) * np.cos(h * z_points)
         Hx = f["Hx"][f["n"] // 4,:].reshape(f["m"], 1) * np.sin(h * z_points)
-        
+
         create_streamplot(z_points, x_points, Hz, Hx, 'b')
         set_labels("$z$", "$x$")
         plt.title("$H_{zx},\ a = %.2e,\ b = %.2e,\ g^2 = %4e$" % (f['a'], f['b'], f['g2']))
@@ -108,7 +107,7 @@ def plot_fields(t, i, f):
         plt.cla()
         Hz = f["Z"][:,f["m"] // 4].reshape(f["n"], 1) * np.cos(h * z_points)
         Hy = f["Hy"][:,f["m"] // 4].reshape(f["n"], 1) * np.sin(h * z_points)
-        
+
         create_streamplot(z_points, y_points, Hz, Hy, 'b')
         set_labels("$z$", "$y$")
         plt.title("$H_{zy},\ a = %.2e,\ b = %.2e,\ g^2 = %4e$" % (f['a'], f['b'], f['g2']))
@@ -117,11 +116,11 @@ def plot_fields(t, i, f):
 
 
 def main():
-    for i, f in enumerate(ew.modes):
+    for i, f in enumerate(ew):
         print("E_%d" % (i+1))
         plot_fields("E", i, f)
 
-    for i, f in enumerate(hw.modes):
+    for i, f in enumerate(hw):
         print("H_%d" % (i+1))
         plot_fields("H", i, f)
 

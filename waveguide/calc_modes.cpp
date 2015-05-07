@@ -405,12 +405,19 @@ string mode2npmatrices(const mode & g)
     return res;
 }
 
-void write2py(const string fname, const vector<mode> & modes)
+void createPy()
 {
     ofstream py;
-    py.open(fname);
+    py.open("waves.py", ios::app);
     py << "import numpy as np\n";
-    py << "modes = [";
+    py.close();
+}
+
+void write2py(const string name, const vector<mode> & modes)
+{
+    ofstream py;
+    py.open("waves.py", ios::app);
+    py << name << " = [";
     for (size_t i = 0; i < modes.size(); ++i)
     {
         py << mode2npmatrices(modes[i]) << ",\n";
@@ -421,8 +428,11 @@ void write2py(const string fname, const vector<mode> & modes)
 
 int main()
 {
-    auto hw = getHwavesFE(0.023, 0.010, 30, 15, 4);
-    auto ew = getEwavesFE(0.023, 0.010, 30, 15, 4);
-    write2py("hw.py", hw);
-    write2py("ew.py", ew);
+    auto hw = getHwaves(0.023, 0.010, 30, 15, 4);
+    auto ew = getEwaves(0.023, 0.010, 30, 15, 4);
+    // auto hw = getHwavesFE(0.023, 0.010, 30, 15, 4);
+    // auto ew = getEwavesFE(0.023, 0.010, 30, 15, 4);
+    createPy();
+    write2py("hw", hw);
+    write2py("ew", ew);
 }
