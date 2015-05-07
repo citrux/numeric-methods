@@ -1,0 +1,16 @@
+Компиляция и запуск
+===================
+
+Windows
+-------
+
+1. Проверьте наличие mingw и ipython в PATH
+2. Дважды кликните на make.bat и наслаждайтесь
+
+
+Linux
+-----
+
+1. make
+2. ./calc_modes
+3. python draw_fields.py

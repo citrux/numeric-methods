@@ -29,8 +29,7 @@ def set_limits(xlims, ylims):
 
 def create_streamplot(x, y, fx, fy, color):
     f = np.sqrt(fx * fx + fy * fy)
-    fmax = f.max()
-    lw = 1.5 * f / fmax
+    lw = 1.5 * f / f.max()
     plt.streamplot(x, y, fx, fy, color=color, linewidth=lw)
     set_limits([x.min(), x.max()], [y.min(), y.max()])
     remove_ticks()

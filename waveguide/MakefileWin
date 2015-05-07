@@ -1,0 +1,21 @@
+CXXFLAGS=-std=c++11 -Wall -Wextra -O2
+
+SRCS=linalg/matrix.cpp linalg/vector.cpp calc_modes.cpp
+OBJS = $(SRCS:.cpp=.o)
+DEPS = $(SRCS:.cpp=.d)
+
+all: calc_modes
+
+calc_modes: $(OBJS) $(DEPS)
+	$(CXX) $(OBJS) -o calc-modes.exe
+
+%.o: %.cpp %.d
+	$(CXX) -c -MD $< -o $@ $(CXXFLAGS)
+
+%.d: %.cpp
+	$(CXX) -c -MD $< $(CXXFLAGS)
+
+clean:
+	$(RM) $(OBJS) $(DEPS)
+
+-include $(DEPS)
