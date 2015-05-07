@@ -1,6 +1,8 @@
 #include <fstream>
+#include <iostream>
 #include <cmath>
 #include "linalg/eigens.hpp"
+#include "linalg/seidel.hpp"
 
 using namespace std;
 
@@ -169,6 +171,201 @@ vector<mode> getHwaves(double a, double b, size_t m, size_t n, size_t count)
     return result;
 }
 
+vector<mode> getEwavesFE(double a, double b, size_t m, size_t n, size_t count)
+{
+    mat D2((m-2) * (n-2));
+    mat A((m-2) * (n-2));
+
+    double hx = a / (m-1), hx2 = hx * hx, hy = b / (n-1), hy2 = hy * hy;
+    // формируем поперечный оператор Лапласа
+    for (size_t i = 0; i < n-2; ++i)
+        for (size_t j = 0; j < m-2; ++j)
+        {
+            size_t ind = i * (m - 2) + j;
+
+            D2[ind].assign((m-2) * (n-2), 0);
+            A[ind].assign((m-2) * (n-2), 0);
+
+            D2[ind][ind] =  -2. / hy2 - 2. / hx2;
+            A[ind][ind] = 0.5;
+            if (j > 0)
+            {
+                D2[ind][ind-1] = 1. / hx2;
+                A[ind][ind-1] = 1. / 12;
+            }
+            if (j < m-3)
+            {
+                D2[ind][ind+1] = 1. / hx2;
+                A[ind][ind+1] = 1. / 12;
+            }
+            if (i > 0)
+            {
+                D2[ind][ind-m+2] = 1. / hy2;
+                A[ind][ind-m+2] = 1. / 12;
+                if (j < m-3)
+                    A[ind][ind-m+3] = 1. / 12;
+            }
+            if (i < n-3)
+            {
+                D2[ind][ind+m-2] = 1. / hy2;
+                A[ind][ind+m-2] = 1. / 12;
+                if (j > 0)
+                    A[ind][ind+m-3] = 1. / 12;
+            }
+        }
+
+    cout << "calc A^-1D2" << endl;
+    D2 = seidel(A, D2, 1e-7);
+    auto lmax = maxEigenValue(D2);
+    // формируем новый оператор, высшие собственные значения которого
+    // будут низшими собственными значениями оператора D2
+    auto op = -D2;
+    // dirty!
+    for (auto i = 0u; i < D2.size(); ++i) {
+        op[i][i] += lmax.l;
+    }
+
+    cout << "calc eigens" << endl;
+    auto modes = getEigens(op, count+1);
+    modes.erase(modes.begin());
+    vector<mode> result(count);
+
+    // операторы частных производных
+    smat Dy = ddy(m, n, hy);
+    smat Dx = ddx(m, n, hx);
+
+    for (size_t k = 0; k < count; ++k)
+    {
+        vec Z(m * n);
+        for (size_t i = 0; i < n; ++i)
+            if (i > 0 && i < n-1)
+                for (size_t j = 1; j < m-1; ++j)
+                    Z[i * m + j] = modes[k].v[(i-1) * (m-2) + (j-1)];
+        auto g2 = modes[k].l - lmax.l;
+        auto h = sqrt(g2);
+        auto omega = h * 1.4142 * 3e8;
+        double eps = 8.85e-12;
+        auto Ex = Dx * Z * (-h / g2);
+        auto Ey = Dy * Z * (-h / g2);
+        auto Hx = Ey * (-omega * eps / h);
+        auto Hy = Ex * (omega * eps / h);
+        result[k] = {a, b, m, n, Z, Ex, Hx, Ey, Hy, g2};
+    }
+    return result;
+}
+
+vector<mode> getHwavesFE(double a, double b, size_t m, size_t n, size_t count)
+{
+    mat D2(m * n);
+    mat A(m * n);
+
+    double hx = a / (m-1), hx2 = hx * hx, hy = b / (n-1), hy2 = hy * hy;
+    // формируем поперечный оператор Лапласа
+    for (size_t i = 0; i < n; ++i)
+        for (size_t j = 0; j < m; ++j)
+        {
+            size_t ind = i * m + j;
+
+            D2[ind].assign(m * n, 0);
+            A[ind].assign(m * n, 0);
+
+            D2[ind][ind] =  -2. / hy2 - 2. / hx2;
+            A[ind][ind] = 0.5;
+            if (j > 0)
+            {
+                D2[ind][ind-1] = 1. / hx2;
+                A[ind][ind-1] = 1. / 12;
+                if (i==0 || i==n-1)
+                {
+                    A[ind][ind-1] = 5. / 24;
+                    D2[ind][ind-1] = 1.5 / hx2;
+                }
+            }
+            if (j < m-1)
+            {
+                D2[ind][ind+1] = 1. / hx2;
+                A[ind][ind+1] = 1. / 12;
+                if (i==0 || i==n-1)
+                {
+                    A[ind][ind+1] = 5. / 24;
+                    D2[ind][ind+1] = 1.5 / hx2;
+                }
+            }
+            if (i > 0)
+            {
+                D2[ind][ind-m] = 1. / hy2;
+                A[ind][ind-m] = 1. / 12;
+                if (j < m-1)
+                    A[ind][ind-m+1] = 1. / 12;
+                if (j==0 || j==m-1)
+                {
+                    A[ind][ind-m] = 5. / 24;
+                    D2[ind][ind-m] = 1.5 / hy2;
+                }
+            }
+            if (i < n-1)
+            {
+                D2[ind][ind+m] = 1. / hy2;
+                A[ind][ind+m] = 1. / 12;
+                if (j > 0)
+                    A[ind][ind+m-1] = 1. / 12;
+                if (j==0 || j==m-1)
+                {
+                    A[ind][ind+m] = 5. / 24;
+                    D2[ind][ind+m] = 1.5 / hy2;
+                }
+            }
+            if (i==0 || j==0 || i==n-1 || j == m-1)
+                A[ind][ind] = 11. / 12;
+            if (i==0 || i==n-1)
+                D2[ind][ind] =  -1. / hy2 - 3. / hx2;
+            if (j==0 || j == m-1)
+                D2[ind][ind] =  -3. / hy2 - 1. / hx2;
+            if ((i==0 || i == n-1) && (j==0 || j==m-1))
+            {
+                A[ind][ind] = 7. / 4;
+                D2[ind][ind] =  -1.5 / hy2 - 1.5 / hx2;
+            }
+    }
+
+    D2 = seidel(A, D2, 1e-7);
+    auto lmax = maxEigenValue(D2);
+    // формируем новый оператор, высшие собственные значения которого
+    // будут низшими собственными значениями оператора D2
+    auto op = -D2;
+    // dirty!
+    for (auto i = 0u; i < D2.size(); ++i) {
+        op[i][i] += lmax.l;
+    }
+
+    cout << "calc eigens" << endl;
+    auto modes = getEigens(op, count+1);
+    modes.erase(modes.begin());
+    vector<mode> result(count);
+
+
+    // операторы частных производных
+    smat Dy = ddy(m, n, hy);
+    smat Dx = ddx(m, n, hx);
+
+
+    for (size_t k = 0; k < count; ++k)
+    {
+        auto Z = modes[k].v;
+        auto g2 = modes[k].l - lmax.l;
+        auto h = sqrt(g2);
+        auto omega = h * 1.4142 * 3e8;
+        double mu = 1.257e-6;
+        auto Ex = Dy * Z * (-omega * mu / g2);
+        auto Ey = Dx * Z * (omega * mu / g2);
+        auto Hx = Ey * (-h / omega / mu);
+        auto Hy = Ex * (h / omega / mu);
+        result[k] = {a, b, m, n, Z, Ex, Hx, Ey, Hy, g2};
+
+    }
+    return result;
+}
+
 string vec2npmatrix(const vec & v, size_t m, size_t n)
 {
     string res = "np.array([";
@@ -224,8 +421,8 @@ void write2py(const string fname, const vector<mode> & modes)
 
 int main()
 {
-    auto hw = getHwaves(0.023, 0.010, 50, 20, 4);
-    auto ew = getEwaves(0.023, 0.010, 50, 20, 4);
+    auto hw = getHwavesFE(0.023, 0.010, 30, 15, 4);
+    auto ew = getEwavesFE(0.023, 0.010, 30, 15, 4);
     write2py("hw.py", hw);
     write2py("ew.py", ew);
 }

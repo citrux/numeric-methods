@@ -31,6 +31,18 @@ vec & operator /= (vec & a, const double b)
 
 vec operator / (vec a, const double b) { return a /= b; }
 
+vec & operator += (vec & a, vec b)
+{
+    for (size_t i = 0; i < a.size(); ++i)
+        a[i] += b[i];
+    return a;
+}
+
+vec operator + (vec a, const vec & b)
+{
+    return a += b;
+}
+
 vec & operator -= (vec & a, vec b)
 {
     for (size_t i = 0; i < a.size(); ++i)

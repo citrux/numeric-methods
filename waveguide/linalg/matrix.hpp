@@ -13,6 +13,7 @@ vec operator * (const smat & a, const vec & b);
 smat operator * (smat a, const double b);
 
 smat operator - (smat a);
+mat operator - (mat a);
 smat & operator += (smat & a, const smat & b);
 smat & operator -= (smat & a, const smat & b);
 smat operator + (smat a, const smat & b);

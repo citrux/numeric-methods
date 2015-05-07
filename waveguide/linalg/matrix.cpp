@@ -63,6 +63,7 @@ smat & operator += (smat & a, const smat & b)
 smat operator + (smat a, const smat & b) { return a += b; }
 
 smat operator - (smat a) { return a * (-1); }
+mat operator - (mat a) { return a * (-1); }
 smat & operator -= (smat & a, const smat & b) {return a +=-b; }
 smat operator - (smat a, const smat & b) { return a -= b; }
 
