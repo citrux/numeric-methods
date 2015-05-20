@@ -21,11 +21,49 @@ srow & operator *= (srow & a, const double b)
     return a;
 }
 
+srow & operator /= (srow & a, const double b)
+{
+    for (auto & el : a.data)
+        el.second /= b;
+    return a;
+}
+
+srow operator * (srow a, const double b)
+{
+    return a *= b;
+}
+
+srow operator / (srow a, const double b)
+{
+    return a / b;
+}
+
 srow & operator += (srow & a, const srow & b)
 {
     for (auto el : b.data)
         a[el.first] += el.second;
     return a;
+}
+
+srow & operator -= (srow & a, const srow & b)
+{
+    for (auto el : b.data)
+        a[el.first] -= el.second;
+    return a;
+}
+
+double srow::operator()(const size_t index)
+{
+    // линейный поиск по строке
+    sort(data.begin(), data.end());
+    auto iter = data.begin();
+    while (iter < data.end() and (*iter).first < index)
+        ++iter;
+    if (iter == data.end() or (*iter).first != index)
+    {
+        return 0;
+    }
+    return (*iter).second;
 }
 
 double & srow::operator[](const size_t index)
@@ -42,7 +80,6 @@ double & srow::operator[](const size_t index)
     }
     return (*iter).second;
 }
-
 
 // Операции над разреженными матрицами
 vec operator * (const smat & a, const vec & b)

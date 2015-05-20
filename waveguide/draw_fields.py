@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-from waves import ew, hw
+import waves
 
 def remove_ticks():
     plt.tick_params(
@@ -115,13 +115,25 @@ def plot_fields(t, i, f):
 
 
 def main():
-    for i, f in enumerate(ew):
-        print("E_%d" % (i+1))
-        plot_fields("E", i, f)
+    if hasattr(waves, "ewfd"):
+        for i, f in enumerate(waves.ewfd):
+            print("FD-E_%d" % (i+1))
+            plot_fields("FD-E", i, f)
 
-    for i, f in enumerate(hw):
-        print("H_%d" % (i+1))
-        plot_fields("H", i, f)
+    if hasattr(waves, "hwfd"):
+        for i, f in enumerate(waves.hwfd):
+            print("FD-H_%d" % (i+1))
+            plot_fields("FD-H", i, f)
+
+    if hasattr(waves, "ewfe"):
+        for i, f in enumerate(waves.ewfe):
+            print("FE-E_%d" % (i+1))
+            plot_fields("FE-E", i, f)
+
+    if hasattr(waves, "hwfe"):
+        for i, f in enumerate(waves.hwfe):
+            print("FE-H_%d" % (i+1))
+            plot_fields("FE-H", i, f)
 
 if __name__ == '__main__':
     main()

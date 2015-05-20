@@ -147,6 +147,7 @@ vector<mode> getHwavesFD(double a, double b, size_t m, size_t n, size_t count)
     // так как нулевая мода нас не интересует, придётся считать на одну
     // гармонику больше
     auto modes = getEigens(op, count+1);
+    modes.erase(modes.begin());
     vector<mode> result(count);
 
     // операторы частных производных
@@ -156,8 +157,8 @@ vector<mode> getHwavesFD(double a, double b, size_t m, size_t n, size_t count)
 
     for (size_t k = 0; k < count; ++k)
     {
-        auto Z = modes[k+1].v;
-        auto g2 = modes[k+1].l - xmax.l;
+        auto Z = modes[k].v;
+        auto g2 = modes[k].l - xmax.l;
         auto h = sqrt(g2);
         auto omega = h * 1.4142 * 3e8;
         double mu = 1.257e-6;
@@ -407,7 +408,7 @@ string mode2npmatrices(const mode & g)
 void createPy()
 {
     ofstream py;
-    py.open("waves.py", ios::app);
+    py.open("waves.py");
     py << "import numpy as np\n";
     py.close();
 }
@@ -429,25 +430,25 @@ void FD(double a, double b, size_t m, size_t n, size_t count)
 {
     auto hw = getHwavesFD(a, b, m, n, count);
     auto ew = getEwavesFD(a, b, m, n, count);
-    createPy();
-    write2py("hw", hw);
-    write2py("ew", ew);
+    write2py("hwfd", hw);
+    write2py("ewfd", ew);
 }
 
 void FE(double a, double b, size_t m, size_t n, size_t count)
 {
     auto hw = getHwavesFE(a, b, m, n, count);
     auto ew = getEwavesFE(a, b, m, n, count);
-    createPy();
-    write2py("hw", hw);
-    write2py("ew", ew);
+    write2py("hwfe", hw);
+    write2py("ewfe", ew);
 }
 
 int main()
 {
+    createPy();
+
     // конечные разности
-    FD(0.023, 0.010, 30, 15, 4);
+    FD(0.023, 0.010, 30, 15, 2);
 
     // конечные элементы 
-    // FE(0.023, 0.010, 30, 15, 4);
+    FE(0.023, 0.010, 30, 15, 2);
 }
