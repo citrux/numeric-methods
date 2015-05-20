@@ -56,7 +56,7 @@ smat ddx(size_t m, size_t n, double hx)
 }
 
 
-vector<mode> getEwaves(double a, double b, size_t m, size_t n, size_t count)
+vector<mode> getEwavesFD(double a, double b, size_t m, size_t n, size_t count)
 {
     smat D2((m-2) * (n-2));
 
@@ -108,7 +108,7 @@ vector<mode> getEwaves(double a, double b, size_t m, size_t n, size_t count)
     return result;
 }
 
-vector<mode> getHwaves(double a, double b, size_t m, size_t n, size_t count)
+vector<mode> getHwavesFD(double a, double b, size_t m, size_t n, size_t count)
 {
     smat D2(m * n);
 
@@ -226,8 +226,7 @@ vector<mode> getEwavesFE(double a, double b, size_t m, size_t n, size_t count)
     }
 
     cout << "calc eigens" << endl;
-    auto modes = getEigens(op, count+1);
-    modes.erase(modes.begin());
+    auto modes = getEigens(op, count);
     vector<mode> result(count);
 
     // операторы частных производных
@@ -426,13 +425,29 @@ void write2py(const string name, const vector<mode> & modes)
     py.close();
 }
 
-int main()
+void FD(double a, double b, size_t m, size_t n, size_t count)
 {
-    auto hw = getHwaves(0.023, 0.010, 30, 15, 4);
-    auto ew = getEwaves(0.023, 0.010, 30, 15, 4);
-    // auto hw = getHwavesFE(0.023, 0.010, 30, 15, 4);
-    // auto ew = getEwavesFE(0.023, 0.010, 30, 15, 4);
+    auto hw = getHwavesFD(a, b, m, n, count);
+    auto ew = getEwavesFD(a, b, m, n, count);
     createPy();
     write2py("hw", hw);
     write2py("ew", ew);
+}
+
+void FE(double a, double b, size_t m, size_t n, size_t count)
+{
+    auto hw = getHwavesFE(a, b, m, n, count);
+    auto ew = getEwavesFE(a, b, m, n, count);
+    createPy();
+    write2py("hw", hw);
+    write2py("ew", ew);
+}
+
+int main()
+{
+    // конечные разности
+    FD(0.023, 0.010, 30, 15, 4);
+
+    // конечные элементы 
+    // FE(0.023, 0.010, 30, 15, 4);
 }
