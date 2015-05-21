@@ -1,5 +1,4 @@
 mingw32-make -fMakefileWin
-echo "press enter to continue"
-pause
+calc-modes.exe
 ipython draw_fields.py
 pause
